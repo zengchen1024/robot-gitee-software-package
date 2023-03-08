@@ -11,7 +11,7 @@ import (
 )
 
 // TODO: set botName
-const botName = ""
+const botName = "software-package"
 
 type iClient interface {
 }

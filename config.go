@@ -1,6 +1,8 @@
 package main
 
-import "github.com/opensourceways/server-common-lib/config"
+import (
+	"github.com/opensourceways/server-common-lib/config"
+)
 
 type configuration struct {
 	ConfigItems []botConfig `json:"config_items,omitempty"`
