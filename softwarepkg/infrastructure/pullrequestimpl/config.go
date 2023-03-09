@@ -1,4 +1,4 @@
-package message
+package pullrequestimpl
 
 type Config struct {
 	Robot RobotConfig `json:"robot"`

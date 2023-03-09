@@ -1,11 +1,7 @@
 package pullrequestimpl
 
 import (
-	"encoding/json"
-	"fmt"
-
 	sdk "github.com/opensourceways/go-gitee/gitee"
-	"github.com/sirupsen/logrus"
 
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain"
 )
@@ -21,6 +17,7 @@ type iClient interface {
 }
 
 func (impl *pullrequestImpl) Create(pkg *domain.SoftwarePkg) (domain.PullRequest, error) {
+	return domain.PullRequest{}, nil
 }
 
 func (impl *pullrequestImpl) Merge(*domain.PullRequest) error {
