@@ -12,7 +12,10 @@ import (
 	"github.com/opensourceways/server-common-lib/secret"
 	"github.com/sirupsen/logrus"
 
-	"github.com/opensourceways/robot-gitee-software-package/message"
+	"github.com/opensourceways/robot-gitee-software-package/config"
+	"github.com/opensourceways/robot-gitee-software-package/kafka"
+	"github.com/opensourceways/robot-gitee-software-package/message-server"
+	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/app"
 )
 
 type options struct {
@@ -46,6 +49,7 @@ func gatherOptions(fs *flag.FlagSet, args ...string) options {
 
 func main() {
 	logrusutil.ComponentInit(botName)
+	log := logrus.NewEntry(logrus.StandardLogger())
 
 	o := gatherOptions(flag.NewFlagSet(os.Args[0], flag.ExitOnError), os.Args[1:]...)
 	if err := o.Validate(); err != nil {
@@ -61,13 +65,32 @@ func main() {
 
 	c := client.NewClient(secretAgent.GetTokenGenerator(o.gitee.TokenPath))
 
-	e, err := message.InitEvent(o.MsgConfigFile, botName, c)
+	// side car
+	cfg, err := config.LoadConfig(o.MsgConfigFile)
 	if err != nil {
-		logrus.WithError(err).Fatal("init event failed")
+		logrus.Fatalf("load config failed, err:%s", err.Error())
 	}
-	defer e.Exit()
 
+	if err := kafka.Init(&cfg.MQ, log); err != nil {
+		logrus.Fatalf("init kafka failed, err:%s", err.Error())
+	}
+	defer kafka.Exit()
+
+	// app
+	msApp := newSoftwarePkgApp(cfg)
+
+	// message server
+	ms := messageserver.Init(msApp)
+	if err := ms.Subscribe(&cfg.MessageServer); err != nil {
+		logrus.Fatalf("start side car failed, err:%s", err.Error())
+	}
+
+	// start
 	r := newRobot(c)
 
 	framework.Run(r, o.service)
+}
+
+func newSoftwarePkgApp(cfg *config.Config) app.MessageSerivce {
+	return nil
 }
