@@ -1,13 +1,15 @@
 package app
 
 import (
-	"github.com/opensourceways/robot-gitee-software-package/pullrequest/domain"
-	"github.com/opensourceways/robot-gitee-software-package/pullrequest/domain/message"
-	"github.com/opensourceways/robot-gitee-software-package/pullrequest/domain/pullrequest"
-	"github.com/opensourceways/robot-gitee-software-package/pullrequest/domain/repository"
+	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain"
+	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain/message"
+	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain/pullrequest"
+	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain/repository"
 )
 
-type PullRequestSerivce interface{}
+type MessageSerivce interface {
+	CreatePR(cmd *CmdToCreatePR) error
+}
 
 type pullRequestSerivce struct {
 	repo     repository.PullRequest
@@ -15,21 +17,21 @@ type pullRequestSerivce struct {
 	producer message.SoftwarePkgMessage
 }
 
-func (s *pullRequestSerivce) CreatePR() error {
-	// create pr
-	// save the pr
-
-	return nil
-}
-
-func (s *pullRequestSerivce) HandleCI(num int, success bool, failedReason string) error {
-	pr, err := s.repo.Find(num)
+func (s *pullRequestSerivce) CreatePR(cmd *CmdToCreatePR) error {
+	pr, err := s.prCli.Create(cmd)
 	if err != nil {
 		return err
 	}
 
-	e := domain.NewPRCIFinishedEvent(&pr)
+	return s.repo.Add(&pr)
+}
 
-	s.producer.NotifyCIResult(&e)
-	return nil
+func (s *pullRequestSerivce) HandleCI(cmd CmdToHandleCI) error {
+	pr, err := s.repo.Find(cmd.PRNum)
+	if err != nil {
+		return err
+	}
+
+	e := domain.NewPRCIFinishedEvent(&pr, cmd.FailedReason)
+	return s.producer.NotifyCIResult(&e)
 }

@@ -1,9 +1,9 @@
 package pullrequest
 
-import "github.com/opensourceways/robot-gitee-software-package/pullrequest/domain"
+import "github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain"
 
 type PullRequest interface {
-	Create(*domain.SoftwarePkg) (int, error)
+	Create(*domain.SoftwarePkg) (domain.PullRequest, error)
 	Merge(*domain.PullRequest) error
 	Close(*domain.PullRequest) error
 }

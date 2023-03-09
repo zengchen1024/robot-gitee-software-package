@@ -20,7 +20,10 @@ type SoftwarePkgBasic struct {
 
 type SoftwarePkg struct {
 	SoftwarePkgBasic
-	Application SoftwarePkgApplication
+
+	ImporterName  string
+	ImporterEmail string
+	Application   SoftwarePkgApplication
 }
 
 // PullRequest

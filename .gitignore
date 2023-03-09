@@ -4,6 +4,8 @@
 *.dll
 *.so
 *.dylib
+*.b
+robot-gitee-software-package
 
 # Test binary, built with `go test -c`
 *.test
