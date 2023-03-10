@@ -8,3 +8,7 @@ type CmdToHandleCI struct {
 	PRNum        int
 	FailedReason string
 }
+
+func (c *CmdToHandleCI) isSuccess() bool {
+	return c.FailedReason == ""
+}
