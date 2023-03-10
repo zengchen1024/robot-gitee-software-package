@@ -8,14 +8,14 @@ import (
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/app"
 )
 
-func Init(service app.MessageSerivce) messageServer {
+func Init(service app.MessageService) messageServer {
 	return messageServer{
 		service: service,
 	}
 }
 
 type messageServer struct {
-	service app.MessageSerivce
+	service app.MessageService
 }
 
 func (m *messageServer) Subscribe(cfg *Config) error {

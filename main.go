@@ -91,6 +91,6 @@ func main() {
 	framework.Run(r, o.service)
 }
 
-func newSoftwarePkgApp(cfg *config.Config) app.MessageSerivce {
+func newSoftwarePkgApp(cfg *config.Config) app.MessageService {
 	return nil
 }

@@ -7,17 +7,17 @@ import (
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain/repository"
 )
 
-type MessageSerivce interface {
+type MessageService interface {
 	CreatePR(cmd *CmdToCreatePR) error
 }
 
-type pullRequestSerivce struct {
+type pullRequestService struct {
 	repo     repository.PullRequest
 	prCli    pullrequest.PullRequest
 	producer message.SoftwarePkgMessage
 }
 
-func (s *pullRequestSerivce) CreatePR(cmd *CmdToCreatePR) error {
+func (s *pullRequestService) CreatePR(cmd *CmdToCreatePR) error {
 	pr, err := s.prCli.Create(cmd)
 	if err != nil {
 		return err
@@ -26,7 +26,7 @@ func (s *pullRequestSerivce) CreatePR(cmd *CmdToCreatePR) error {
 	return s.repo.Add(&pr)
 }
 
-func (s *pullRequestSerivce) HandleCI(cmd CmdToHandleCI) error {
+func (s *pullRequestService) HandleCI(cmd CmdToHandleCI) error {
 	pr, err := s.repo.Find(cmd.PRNum)
 	if err != nil {
 		return err

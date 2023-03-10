@@ -1,30 +1,17 @@
 package pullrequestimpl
 
 type Config struct {
-	Robot RobotConfig `json:"robot"`
-	PR    PRConfig    `json:"pr"`
+	Robot       RobotConfig `json:"robot"`
+	PR          PRConfig    `json:"pr"`
+	ShellScript string      `json:"shell_script"`
 }
 
 func (cfg *Config) SetDefault() {
 	cfg.PR.setDefault()
 
-	/*
-		if pr.BranchName == "" {
-			pr.BranchName = "software_pkg_%s"
-		}
-
-		if pr.PRName == "" {
-			pr.PRName = "software_pkg_%s,新增软件包申请"
-		}
-
-		if pr.ModifyFiles.SigInfo == "" {
-			pr.ModifyFiles.SigInfo = "community/sig/%s/sig-info.yaml"
-		}
-
-		if pr.ModifyFiles.NewRepo == "" {
-			pr.ModifyFiles.NewRepo = "community/sig/%s/src-openeuler/%s/%s.yaml"
-		}
-	*/
+	if cfg.ShellScript == "" {
+		cfg.ShellScript = "./repo.sh"
+	}
 }
 
 type RobotConfig struct {
@@ -34,12 +21,10 @@ type RobotConfig struct {
 }
 
 type PRConfig struct {
-	ModifyFiles   ModifyFiles   `json:"modify_files"`
 	NewRepoBranch NewRepoBranch `json:"new_repo_branch"`
 	Org           string        `json:"org"`
 	Repo          string        `json:"repo"`
 	PRName        string        `json:"pr_name"`
-	BranchName    string        `json:"branch_name"`
 }
 
 func (cfg *PRConfig) setDefault() {
@@ -51,12 +36,11 @@ func (cfg *PRConfig) setDefault() {
 		cfg.Repo = "community"
 	}
 
-	cfg.NewRepoBranch.setDefault()
-}
+	if cfg.PRName == "" {
+		cfg.PRName = ",新增软件包申请"
+	}
 
-type ModifyFiles struct {
-	SigInfo string `json:"sig_info"`
-	NewRepo string `json:"new_repo"`
+	cfg.NewRepoBranch.setDefault()
 }
 
 type NewRepoBranch struct {

@@ -6,9 +6,11 @@ import (
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain"
 )
 
-type pullrequestImpl struct {
-	cli iClient
-	cfg Config
+type pullRequestImpl struct {
+	cli        iClient
+	cfg        Config
+	pkg        *domain.SoftwarePkg
+	robotLogin string
 }
 
 type iClient interface {
@@ -16,14 +18,32 @@ type iClient interface {
 	CreatePullRequest(org, repo, title, body, head, base string, canModify bool) (sdk.PullRequest, error)
 }
 
-func (impl *pullrequestImpl) Create(pkg *domain.SoftwarePkg) (domain.PullRequest, error) {
-	return domain.PullRequest{}, nil
+func (impl *pullRequestImpl) Create(pkg *domain.SoftwarePkg) (pr domain.PullRequest, err error) {
+	impl.pkg = pkg
+
+	if err = impl.initRepo(); err != nil {
+		return
+	}
+
+	if err = impl.newBranch(); err != nil {
+		return
+	}
+
+	if err = impl.modifyFiles(); err != nil {
+		return
+	}
+
+	if err = impl.commit(); err != nil {
+		return
+	}
+
+	return impl.submit()
 }
 
-func (impl *pullrequestImpl) Merge(*domain.PullRequest) error {
+func (impl *pullRequestImpl) Merge(*domain.PullRequest) error {
 	return nil
 }
 
-func (impl *pullrequestImpl) Close(*domain.PullRequest) error {
+func (impl *pullRequestImpl) Close(*domain.PullRequest) error {
 	return nil
 }
