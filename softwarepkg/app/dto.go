@@ -12,3 +12,7 @@ type CmdToHandleCI struct {
 func (c *CmdToHandleCI) isSuccess() bool {
 	return c.FailedReason == ""
 }
+
+type CmdToMergePR struct {
+	PRNum int
+}
