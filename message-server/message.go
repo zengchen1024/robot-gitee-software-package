@@ -24,15 +24,16 @@ func (msg *messageOfApprovedPkg) toCmd() (cmd app.CmdToMergePR, err error) {
 	sp := strings.Split(strings.TrimSuffix(msg.RelevantPR, "/"), "/")
 	if len(sp) == 0 {
 		err = errors.New("relevant pr is empty")
+
 		return
 	}
 
 	prNumInt, err := strconv.Atoi(sp[len(sp)-1])
-	if err != nil {
-		return
+	if err == nil {
+		cmd.PRNum = prNumInt
 	}
-
-	cmd.PRNum = prNumInt
 
 	return
 }
+
+type messageOfRejectedPkg = messageOfApprovedPkg

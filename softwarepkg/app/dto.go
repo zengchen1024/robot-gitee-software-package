@@ -16,3 +16,5 @@ func (c *CmdToHandleCI) isSuccess() bool {
 type CmdToMergePR struct {
 	PRNum int
 }
+
+type CmdToClosePR = CmdToMergePR
