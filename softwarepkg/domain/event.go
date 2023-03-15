@@ -43,3 +43,37 @@ func NewRepoCreatedEvent(pr *PullRequest, url string) repoCreatedEvent {
 		RepoLink: url,
 	}
 }
+
+type prClosedEvent struct {
+	PkgId      string `json:"pkg_id"`
+	Reason     string `json:"reason"`
+	RejectedBy string `json:"rejected_by"`
+}
+
+func (e *prClosedEvent) Message() ([]byte, error) {
+	return json.Marshal(e)
+}
+
+func NewPRClosedEvent(pr *PullRequest, reason, rejectBy string) prClosedEvent {
+	return prClosedEvent{
+		PkgId:      pr.Pkg.Id,
+		Reason:     reason,
+		RejectedBy: rejectBy,
+	}
+}
+
+type prMergedEvent struct {
+	PkgId      string   `json:"pkg_id"`
+	ApprovedBy []string `json:"approved_by"`
+}
+
+func (e *prMergedEvent) Message() ([]byte, error) {
+	return json.Marshal(e)
+}
+
+func NewPRMergedEvent(pr *PullRequest, ApprovedBy []string) prMergedEvent {
+	return prMergedEvent{
+		PkgId:      pr.Pkg.Id,
+		ApprovedBy: ApprovedBy,
+	}
+}

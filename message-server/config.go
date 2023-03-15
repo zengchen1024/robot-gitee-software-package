@@ -12,4 +12,6 @@ type Topics struct {
 	RejectedPkg  string `json:"rejected_pkg" required:"true"`
 	AbandonedPkg string `json:"abandoned_pkg" required:"true"`
 	CreatedRepo  string `json:"created_repo" required:"true"`
+	ClosedPR     string `json:"closed_pr"    required:"true"`
+	MergedPR     string `json:"merged_pr"    required:"true"`
 }

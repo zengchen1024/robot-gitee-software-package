@@ -24,6 +24,14 @@ func (m *MessageImpl) NotifyRepoCreatedResult(e message.EventMessage) error {
 	return send(m.topics.CreatedRepo, e)
 }
 
+func (m *MessageImpl) NotifyPRClosed(e message.EventMessage) error {
+	return send(m.topics.ClosedPR, e)
+}
+
+func (m *MessageImpl) NotifyPRMerged(e message.EventMessage) error {
+	return send(m.topics.MergedPR, e)
+}
+
 func send(topic string, v message.EventMessage) error {
 	body, err := v.Message()
 	if err != nil {

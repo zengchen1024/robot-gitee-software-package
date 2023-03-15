@@ -15,6 +15,7 @@ import (
 const botName = "software-package"
 
 type iClient interface {
+	GetBot() (sdk.User, error)
 }
 
 func newRobot(cli iClient, prService app.PullRequestService) *robot {
@@ -60,7 +61,7 @@ func (bot *robot) handlePREvent(e *sdk.PullRequestEvent, c config.Config, log *l
 	prState := e.GetPullRequest().GetState()
 
 	if prState != sdk.StatusOpen {
-		return nil
+		return bot.handlePRState(e)
 	}
 
 	if sdk.GetPullRequestAction(e) != sdk.PRActionUpdatedLabel {

@@ -10,6 +10,8 @@ import (
 type PullRequestService interface {
 	HandleCI(cmd *CmdToHandleCI) error
 	HandleRepoCreated(*domain.PullRequest, string) error
+	HandlePRMerged(cmd *CmdToHandlePRMerged) error
+	HandlePRClosed(cmd *CmdToHandlePRClosed) error
 }
 
 type pullRequestService struct {
@@ -37,6 +39,36 @@ func (s *pullRequestService) HandleCI(cmd *CmdToHandleCI) error {
 func (s *pullRequestService) HandleRepoCreated(pr *domain.PullRequest, url string) error {
 	e := domain.NewRepoCreatedEvent(pr, url)
 	if err := s.producer.NotifyRepoCreatedResult(&e); err != nil {
+		return err
+	}
+
+	return s.repo.Remove(pr.Num)
+}
+
+func (s *pullRequestService) HandlePRMerged(cmd *CmdToHandlePRMerged) error {
+	pr, err := s.repo.Find(cmd.PRNum)
+	if err != nil {
+		return err
+	}
+
+	e := domain.NewPRMergedEvent(&pr, cmd.ApprovedBy)
+	if err = s.producer.NotifyPRMerged(&e); err != nil {
+		return err
+	}
+
+	pr.SetMerged()
+
+	return s.repo.Save(&pr)
+}
+
+func (s *pullRequestService) HandlePRClosed(cmd *CmdToHandlePRClosed) error {
+	pr, err := s.repo.Find(cmd.PRNum)
+	if err != nil {
+		return err
+	}
+
+	e := domain.NewPRClosedEvent(&pr, cmd.Reason, cmd.RejectedBy)
+	if err = s.producer.NotifyPRClosed(&e); err != nil {
 		return err
 	}
 

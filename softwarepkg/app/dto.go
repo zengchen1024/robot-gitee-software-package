@@ -18,3 +18,14 @@ type CmdToMergePR struct {
 }
 
 type CmdToClosePR = CmdToMergePR
+
+type CmdToHandlePRMerged struct {
+	PRNum      int
+	ApprovedBy []string
+}
+
+type CmdToHandlePRClosed struct {
+	PRNum      int
+	Reason     string
+	RejectedBy string
+}
