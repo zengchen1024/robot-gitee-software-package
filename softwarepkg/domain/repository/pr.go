@@ -4,5 +4,8 @@ import "github.com/opensourceways/robot-gitee-software-package/softwarepkg/domai
 
 type PullRequest interface {
 	Add(*domain.PullRequest) error
+	Save(*domain.PullRequest) error
 	Find(int) (domain.PullRequest, error)
+	FindAll(isMerged bool) ([]domain.PullRequest, error)
+	Remove(int) error
 }

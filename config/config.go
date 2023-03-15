@@ -6,6 +6,7 @@ import (
 	"github.com/opensourceways/robot-gitee-software-package/kafka"
 	"github.com/opensourceways/robot-gitee-software-package/message-server"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/emailimpl"
+	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/watchingimpl"
 )
 
 func LoadConfig(path string) (*Config, error) {
@@ -34,6 +35,7 @@ type Config struct {
 	MQ            kafka.Config         `json:"mq"`
 	MessageServer messageserver.Config `json:"message_server"`
 	Email         emailimpl.Config     `json:"email"`
+	Watch         watchingimpl.Config  `json:"watch"`
 }
 
 func (cfg *Config) configItems() []interface{} {
@@ -41,6 +43,7 @@ func (cfg *Config) configItems() []interface{} {
 		&cfg.MQ,
 		&cfg.MessageServer,
 		&cfg.Email,
+		&cfg.Watch,
 	}
 }
 

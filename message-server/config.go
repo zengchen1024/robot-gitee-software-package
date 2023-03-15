@@ -11,4 +11,5 @@ type Topics struct {
 	ApprovedPkg  string `json:"approved_pkg" required:"true"`
 	RejectedPkg  string `json:"rejected_pkg" required:"true"`
 	AbandonedPkg string `json:"abandoned_pkg" required:"true"`
+	CreatedRepo  string `json:"created_repo" required:"true"`
 }

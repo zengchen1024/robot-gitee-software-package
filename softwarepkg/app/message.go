@@ -6,9 +6,9 @@ import (
 )
 
 type MessageService interface {
-	CreatePR(cmd *CmdToCreatePR) error
-	MergePR(cmd *CmdToMergePR) error
-	ClosePR(cmd *CmdToClosePR) error
+	CreatePR(*CmdToCreatePR) error
+	MergePR(*CmdToMergePR) error
+	ClosePR(*CmdToClosePR) error
 }
 
 type messageService struct {
@@ -35,9 +35,9 @@ func (s *messageService) MergePR(cmd *CmdToMergePR) error {
 		return err
 	}
 
-	//TODO monitor create repo
+	pr.SetMerged()
 
-	return nil
+	return s.repo.Save(&pr)
 }
 
 func (s *messageService) ClosePR(cmd *CmdToClosePR) error {

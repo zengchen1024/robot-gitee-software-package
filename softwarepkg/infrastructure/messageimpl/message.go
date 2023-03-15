@@ -20,6 +20,10 @@ func (m *MessageImpl) NotifyCIResult(e message.EventMessage) error {
 	return send(m.topics.CIPassed, e)
 }
 
+func (m *MessageImpl) NotifyRepoCreatedResult(e message.EventMessage) error {
+	return send(m.topics.CreatedRepo, e)
+}
+
 func send(topic string, v message.EventMessage) error {
 	body, err := v.Message()
 	if err != nil {

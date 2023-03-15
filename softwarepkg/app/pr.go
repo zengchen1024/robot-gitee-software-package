@@ -9,6 +9,7 @@ import (
 
 type PullRequestService interface {
 	HandleCI(cmd *CmdToHandleCI) error
+	HandleRepoCreated(*domain.PullRequest, string) error
 }
 
 type pullRequestService struct {
@@ -31,4 +32,13 @@ func (s *pullRequestService) HandleCI(cmd *CmdToHandleCI) error {
 
 	e := domain.NewPRCIFinishedEvent(&pr, cmd.FailedReason)
 	return s.producer.NotifyCIResult(&e)
+}
+
+func (s *pullRequestService) HandleRepoCreated(pr *domain.PullRequest, url string) error {
+	e := domain.NewRepoCreatedEvent(pr, url)
+	if err := s.producer.NotifyRepoCreatedResult(&e); err != nil {
+		return err
+	}
+
+	return s.repo.Remove(pr.Num)
 }

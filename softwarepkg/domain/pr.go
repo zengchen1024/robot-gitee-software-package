@@ -28,9 +28,18 @@ type SoftwarePkg struct {
 
 // PullRequest
 type PullRequest struct {
-	Num  int
-	Link string
-	Pkg  SoftwarePkgBasic
+	Num    int
+	Link   string
+	merged bool
+	Pkg    SoftwarePkgBasic
+}
+
+func (r *PullRequest) SetMerged() {
+	r.merged = true
+}
+
+func (r *PullRequest) IsMerged() bool {
+	return r.merged
 }
 
 // SoftwarePkgRepo
