@@ -16,6 +16,7 @@ import (
 	"github.com/opensourceways/robot-gitee-software-package/kafka"
 	"github.com/opensourceways/robot-gitee-software-package/message-server"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/app"
+	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/postgresql"
 )
 
 type options struct {
@@ -71,7 +72,11 @@ func main() {
 		logrus.Fatalf("load config failed, err:%s", err.Error())
 	}
 
-	if err := kafka.Init(&cfg.MQ, log); err != nil {
+	if err = postgresql.Init(&cfg.Postgresql.DB); err != nil {
+		logrus.Fatalf("init db failed, err:%s", err.Error())
+	}
+
+	if err = kafka.Init(&cfg.MQ, log); err != nil {
 		logrus.Fatalf("init kafka failed, err:%s", err.Error())
 	}
 	defer kafka.Exit()
@@ -86,7 +91,7 @@ func main() {
 	}
 
 	// start
-	r := newRobot(c)
+	r := newRobot(c, nil)
 
 	framework.Run(r, o.service)
 }

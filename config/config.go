@@ -6,6 +6,8 @@ import (
 	"github.com/opensourceways/robot-gitee-software-package/kafka"
 	"github.com/opensourceways/robot-gitee-software-package/message-server"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/emailimpl"
+	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/postgresql"
+	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/repositoryimpl"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/watchingimpl"
 )
 
@@ -31,11 +33,18 @@ type configSetDefault interface {
 	SetDefault()
 }
 
+type PostgresqlConfig struct {
+	DB postgresql.Config `json:"db" required:"true"`
+
+	repositoryimpl.Config
+}
+
 type Config struct {
 	MQ            kafka.Config         `json:"mq"`
 	MessageServer messageserver.Config `json:"message_server"`
 	Email         emailimpl.Config     `json:"email"`
 	Watch         watchingimpl.Config  `json:"watch"`
+	Postgresql    PostgresqlConfig     `json:"postgresql"     required:"true"`
 }
 
 func (cfg *Config) configItems() []interface{} {
@@ -44,6 +53,8 @@ func (cfg *Config) configItems() []interface{} {
 		&cfg.MessageServer,
 		&cfg.Email,
 		&cfg.Watch,
+		&cfg.Postgresql.DB,
+		&cfg.Postgresql.Config,
 	}
 }
 
