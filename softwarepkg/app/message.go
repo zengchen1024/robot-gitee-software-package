@@ -11,6 +11,14 @@ type MessageService interface {
 	ClosePR(*CmdToClosePR) error
 }
 
+func NewMessageService(repo repository.PullRequest, prCli pullrequest.PullRequest,
+) *messageService {
+	return &messageService{
+		repo:  repo,
+		prCli: prCli,
+	}
+}
+
 type messageService struct {
 	repo  repository.PullRequest
 	prCli pullrequest.PullRequest

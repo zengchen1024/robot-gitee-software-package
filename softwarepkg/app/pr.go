@@ -14,6 +14,16 @@ type PullRequestService interface {
 	HandlePRClosed(cmd *CmdToHandlePRClosed) error
 }
 
+func NewPullRequestService(
+	r repository.PullRequest, p message.SoftwarePkgMessage, e email.Email,
+) *pullRequestService {
+	return &pullRequestService{
+		repo:     r,
+		producer: p,
+		email:    e,
+	}
+}
+
 type pullRequestService struct {
 	repo     repository.PullRequest
 	producer message.SoftwarePkgMessage

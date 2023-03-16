@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"os"
@@ -16,7 +17,12 @@ import (
 	"github.com/opensourceways/robot-gitee-software-package/kafka"
 	"github.com/opensourceways/robot-gitee-software-package/message-server"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/app"
+	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/emailimpl"
+	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/messageimpl"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/postgresql"
+	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/pullrequestimpl"
+	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/repositoryimpl"
+	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/watchingimpl"
 )
 
 type options struct {
@@ -81,21 +87,32 @@ func main() {
 	}
 	defer kafka.Exit()
 
-	// app
-	msApp := newSoftwarePkgApp(cfg)
+	email := emailimpl.NewEmailService(cfg.Email)
+	message := messageimpl.NewMessageImpl(cfg.MessageServer.Topics)
+	pullRequest := pullrequestimpl.NewPullRequestImpl(c, cfg.PullRequest)
+	repo := repositoryimpl.NewSoftwarePkgPR(&cfg.Postgresql.Config)
+
+	prService := app.NewPullRequestService(repo, message, email)
+	messageService := app.NewMessageService(repo, pullRequest)
+
+	watch := watchingimpl.NewWatchingImpl(cfg.Watch, c, repo, prService)
+	ctx, cancel := context.WithCancel(context.Background())
+	stop := make(chan struct{})
+	go watch.Start(ctx, stop)
+	defer func() {
+		cancel()
+		<-stop
+		logrus.Info("watch exit normally")
+	}()
 
 	// message server
-	ms := messageserver.Init(msApp)
+	ms := messageserver.Init(messageService)
 	if err := ms.Subscribe(&cfg.MessageServer); err != nil {
 		logrus.Fatalf("start side car failed, err:%s", err.Error())
 	}
 
 	// start
-	r := newRobot(c, nil)
+	r := newRobot(c, prService)
 
 	framework.Run(r, o.service)
-}
-
-func newSoftwarePkgApp(cfg *config.Config) app.MessageService {
-	return nil
 }

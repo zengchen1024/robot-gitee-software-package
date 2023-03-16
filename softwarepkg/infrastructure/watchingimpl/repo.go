@@ -1,6 +1,7 @@
 package watchingimpl
 
 import (
+	"context"
 	"time"
 
 	sdk "github.com/opensourceways/go-gitee/gitee"
@@ -10,10 +11,15 @@ import (
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain/repository"
 )
 
-func NewWatchingImpl(cfg Config, cli iClient) *WatchingImpl {
+func NewWatchingImpl(
+	cfg Config, cli iClient,
+	repo repository.PullRequest, prService app.PullRequestService,
+) *WatchingImpl {
 	return &WatchingImpl{
-		cfg: cfg,
-		cli: cli,
+		cfg:       cfg,
+		cli:       cli,
+		repo:      repo,
+		prService: prService,
 	}
 }
 
@@ -28,8 +34,17 @@ type WatchingImpl struct {
 	prService app.PullRequestService
 }
 
-func (impl *WatchingImpl) Run() {
+func (impl *WatchingImpl) Start(ctx context.Context, stop chan struct{}) {
 	interval := impl.cfg.IntervalDuration()
+
+	checkStop := func() bool {
+		select {
+		case <-ctx.Done():
+			return true
+		default:
+			return false
+		}
+	}
 
 	for {
 		prs, err := impl.repo.FindAll(true)
@@ -49,6 +64,12 @@ func (impl *WatchingImpl) Run() {
 
 			if err = impl.prService.HandleRepoCreated(&pr, v.Url); err != nil {
 				logrus.Errorf("handle repo created err: %s", err.Error())
+			}
+
+			if checkStop() {
+				close(stop)
+
+				return
 			}
 		}
 

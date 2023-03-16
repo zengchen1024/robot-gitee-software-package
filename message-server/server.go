@@ -40,11 +40,7 @@ func (m *messageServer) handleNewPkg(msg []byte) error {
 		return err
 	}
 
-	cmd, err := v.toCmd()
-	if err != nil {
-		return err
-	}
-
+	cmd := v.toCmd()
 	return m.service.CreatePR(&cmd)
 }
 

@@ -7,6 +7,7 @@ import (
 	"github.com/opensourceways/robot-gitee-software-package/message-server"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/emailimpl"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/postgresql"
+	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/pullrequestimpl"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/repositoryimpl"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/watchingimpl"
 )
@@ -40,11 +41,12 @@ type PostgresqlConfig struct {
 }
 
 type Config struct {
-	MQ            kafka.Config         `json:"mq"`
-	MessageServer messageserver.Config `json:"message_server"`
-	Email         emailimpl.Config     `json:"email"`
-	Watch         watchingimpl.Config  `json:"watch"`
-	Postgresql    PostgresqlConfig     `json:"postgresql"     required:"true"`
+	MQ            kafka.Config           `json:"mq"`
+	MessageServer messageserver.Config   `json:"message_server"`
+	Email         emailimpl.Config       `json:"email"`
+	Watch         watchingimpl.Config    `json:"watch"`
+	Postgresql    PostgresqlConfig       `json:"postgresql"`
+	PullRequest   pullrequestimpl.Config `json:"pull_request"`
 }
 
 func (cfg *Config) configItems() []interface{} {
@@ -55,6 +57,7 @@ func (cfg *Config) configItems() []interface{} {
 		&cfg.Watch,
 		&cfg.Postgresql.DB,
 		&cfg.Postgresql.Config,
+		&cfg.PullRequest,
 	}
 }
 

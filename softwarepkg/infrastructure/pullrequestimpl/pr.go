@@ -6,6 +6,13 @@ import (
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain"
 )
 
+func NewPullRequestImpl(cli iClient, cfg Config) *pullRequestImpl {
+	return &pullRequestImpl{
+		cli: cli,
+		cfg: cfg,
+	}
+}
+
 type pullRequestImpl struct {
 	cli        iClient
 	cfg        Config
