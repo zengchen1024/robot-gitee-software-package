@@ -24,7 +24,8 @@ func (m *messageServer) Subscribe(cfg *Config) error {
 		cfg.Topics.ApprovedPkg: m.handleApprovedPkg,
 		cfg.Topics.RejectedPkg: m.handleRejectedPkg,
 		// the abandoned logic is the same as rejected
-		cfg.Topics.AbandonedPkg: m.handleRejectedPkg,
+		cfg.Topics.AbandonedPkg:     m.handleRejectedPkg,
+		cfg.Topics.AlreadyClosedPkg: m.handleRejectedPkg,
 	}
 
 	return kafka.Instance().Subscribe(cfg.GroupName, subscribers)
