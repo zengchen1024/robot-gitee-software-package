@@ -88,7 +88,7 @@ func main() {
 	defer kafka.Exit()
 
 	email := emailimpl.NewEmailService(cfg.Email)
-	message := messageimpl.NewMessageImpl(cfg.MessageServer.Topics)
+	message := messageimpl.NewMessageImpl(cfg.MessageServer.Message)
 	pullRequest := pullrequestimpl.NewPullRequestImpl(c, cfg.PullRequest)
 	repo := repositoryimpl.NewSoftwarePkgPR(&cfg.Postgresql.Config)
 

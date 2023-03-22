@@ -2,34 +2,33 @@ package messageimpl
 
 import (
 	"github.com/opensourceways/robot-gitee-software-package/kafka"
-	messageserver "github.com/opensourceways/robot-gitee-software-package/message-server"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain/message"
 )
 
-func NewMessageImpl(topics messageserver.Topics) *MessageImpl {
+func NewMessageImpl(c Config) *MessageImpl {
 	return &MessageImpl{
-		topics: topics,
+		cfg: c,
 	}
 }
 
 type MessageImpl struct {
-	topics messageserver.Topics
+	cfg Config
 }
 
 func (m *MessageImpl) NotifyCIResult(e message.EventMessage) error {
-	return send(m.topics.CIPassed, e)
+	return send(m.cfg.TopicsToNotify.CIPassed, e)
 }
 
 func (m *MessageImpl) NotifyRepoCreatedResult(e message.EventMessage) error {
-	return send(m.topics.CreatedRepo, e)
+	return send(m.cfg.TopicsToNotify.CreatedRepo, e)
 }
 
 func (m *MessageImpl) NotifyPRClosed(e message.EventMessage) error {
-	return send(m.topics.ClosedPR, e)
+	return send(m.cfg.TopicsToNotify.ClosedPR, e)
 }
 
 func (m *MessageImpl) NotifyPRMerged(e message.EventMessage) error {
-	return send(m.topics.MergedPR, e)
+	return send(m.cfg.TopicsToNotify.MergedPR, e)
 }
 
 func send(topic string, v message.EventMessage) error {

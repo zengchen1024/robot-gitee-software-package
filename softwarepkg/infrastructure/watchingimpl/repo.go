@@ -62,7 +62,7 @@ func (impl *WatchingImpl) Start(ctx context.Context, stop chan struct{}) {
 				continue
 			}
 
-			if err = impl.prService.HandleRepoCreated(&pr, v.Url); err != nil {
+			if err = impl.prService.HandleRepoCreated(&pr, v.HtmlUrl); err != nil {
 				logrus.Errorf("handle repo created err: %s", err.Error())
 			}
 

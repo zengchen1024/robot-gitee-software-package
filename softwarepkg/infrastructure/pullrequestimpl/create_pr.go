@@ -116,7 +116,7 @@ func (impl *pullRequestImpl) genAppendSigInfoData() (string, error) {
 		Importer:      impl.pkg.ImporterName,
 	}
 
-	return impl.genTemplate("./template/append_sig_info.tpl", data)
+	return impl.genTemplate(impl.cfg.Template.AppendSigInfo, data)
 }
 
 func (impl *pullRequestImpl) genNewRepoData() (string, error) {
@@ -136,7 +136,7 @@ func (impl *pullRequestImpl) genNewRepoData() (string, error) {
 		PublicType:    impl.cfg.PR.NewRepoBranch.PublicType,
 	}
 
-	return impl.genTemplate("./template/new_repo_file.tpl", data)
+	return impl.genTemplate(impl.cfg.Template.NewRepoFile, data)
 }
 
 func (impl *pullRequestImpl) genTemplate(fileName string, data interface{}) (string, error) {
@@ -183,7 +183,7 @@ func (impl *pullRequestImpl) submit() (dpr domain.PullRequest, err error) {
 
 	dpr = domain.PullRequest{
 		Num:  int(pr.Number),
-		Link: pr.Url,
+		Link: pr.HtmlUrl,
 		Pkg:  impl.pkg.SoftwarePkgBasic,
 	}
 

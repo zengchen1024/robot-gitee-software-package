@@ -3,14 +3,16 @@ package pullrequestimpl
 type Config struct {
 	Robot       RobotConfig `json:"robot"`
 	PR          PRConfig    `json:"pr"`
+	Template    Template    `json:"template"`
 	ShellScript string      `json:"shell_script"`
 }
 
 func (cfg *Config) SetDefault() {
 	cfg.PR.setDefault()
+	cfg.Template.setDefault()
 
 	if cfg.ShellScript == "" {
-		cfg.ShellScript = "./repo.sh"
+		cfg.ShellScript = "/opt/app/repo.sh"
 	}
 }
 
@@ -60,5 +62,20 @@ func (cfg *NewRepoBranch) setDefault() {
 
 	if cfg.PublicType == "" {
 		cfg.PublicType = "public"
+	}
+}
+
+type Template struct {
+	AppendSigInfo string `json:"append_sig_info"`
+	NewRepoFile   string `json:"new_repo_file"`
+}
+
+func (t *Template) setDefault() {
+	if t.AppendSigInfo == "" {
+		t.AppendSigInfo = "/opt/app/template/append_sig_info.tpl"
+	}
+
+	if t.NewRepoFile == "" {
+		t.NewRepoFile = "/opt/app/template/new_repo_file.tpl"
 	}
 }

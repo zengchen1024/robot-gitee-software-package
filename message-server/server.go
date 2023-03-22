@@ -55,11 +55,7 @@ func (m *messageServer) handleApprovedPkg(msg []byte) error {
 		return err
 	}
 
-	cmd, err := v.toCmd()
-	if err != nil {
-		return err
-	}
-
+	cmd := v.toCmd()
 	return m.service.MergePR(&cmd)
 }
 
@@ -73,10 +69,6 @@ func (m *messageServer) handleRejectedPkg(msg []byte) error {
 		return err
 	}
 
-	cmd, err := v.toCmd()
-	if err != nil {
-		return err
-	}
-
+	cmd := v.toCmd()
 	return m.service.ClosePR(&cmd)
 }

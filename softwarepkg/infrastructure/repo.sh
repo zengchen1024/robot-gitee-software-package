@@ -7,11 +7,12 @@ init() {
        return
     fi
 
-    git clone $repo_url
+    git clone --depth=1 $repo_url
     cd $repo
 
     git config user.name $git_user
     git config user.email $git_email
+    git config --global pack.threads 1
 
     git remote add upstream ${upstream}
 }
@@ -24,7 +25,7 @@ new_branch() {
 
     git checkout master
 
-    git fetch upstream
+    git fetch upstream master
     git rebase upstream/master
 
     git checkout -b $branch_name

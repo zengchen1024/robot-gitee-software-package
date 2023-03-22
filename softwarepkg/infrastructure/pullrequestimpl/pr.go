@@ -26,6 +26,7 @@ type iClient interface {
 	GetGiteePullRequest(org, repo string, number int32) (sdk.PullRequest, error)
 	MergePR(owner, repo string, number int32, opt sdk.PullRequestMergePutParam) error
 	ClosePR(org, repo string, number int32) error
+	CreatePRComment(org, repo string, number int32, comment string) error
 }
 
 func (impl *pullRequestImpl) Create(pkg *domain.SoftwarePkg) (pr domain.PullRequest, err error) {
@@ -69,8 +70,9 @@ func (impl *pullRequestImpl) Merge(pr *domain.PullRequest) error {
 func (impl *pullRequestImpl) Close(pr *domain.PullRequest) error {
 	org := impl.cfg.PR.Org
 	repo := impl.cfg.PR.Repo
+	prNum := int32(pr.Num)
 
-	prDetail, err := impl.cli.GetGiteePullRequest(org, repo, int32(pr.Num))
+	prDetail, err := impl.cli.GetGiteePullRequest(org, repo, prNum)
 	if err != nil {
 		return err
 	}
@@ -79,5 +81,12 @@ func (impl *pullRequestImpl) Close(pr *domain.PullRequest) error {
 		return nil
 	}
 
-	return impl.cli.ClosePR(org, repo, int32(pr.Num))
+	return impl.cli.ClosePR(org, repo, prNum)
+}
+
+func (impl *pullRequestImpl) Comment(pr *domain.PullRequest, content string) error {
+	return impl.cli.CreatePRComment(
+		impl.cfg.PR.Org, impl.cfg.PR.Repo,
+		int32(pr.Num), content,
+	)
 }

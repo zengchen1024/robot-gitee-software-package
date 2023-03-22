@@ -1,6 +1,8 @@
 package app
 
 import (
+	"github.com/sirupsen/logrus"
+
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain/pullrequest"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain/repository"
 )
@@ -52,6 +54,10 @@ func (s *messageService) ClosePR(cmd *CmdToClosePR) error {
 	pr, err := s.repo.Find(cmd.PRNum)
 	if err != nil {
 		return err
+	}
+
+	if err = s.prCli.Comment(&pr, cmd.Reason); err != nil {
+		logrus.Errorf("add comment to pr:%d, failed: %s", pr.Num, err.Error())
 	}
 
 	return s.prCli.Close(&pr)

@@ -1,6 +1,8 @@
 package app
 
 import (
+	"github.com/sirupsen/logrus"
+
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain/email"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain/message"
@@ -38,7 +40,7 @@ func (s *pullRequestService) HandleCI(cmd *CmdToHandleCI) error {
 
 	if !cmd.isSuccess() {
 		if err = s.email.Send(pr.Link); err != nil {
-			return err
+			logrus.Errorf("send email failed: %s", err.Error())
 		}
 	}
 

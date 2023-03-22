@@ -1,10 +1,6 @@
 package messageserver
 
 import (
-	"errors"
-	"strconv"
-	"strings"
-
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/app"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain"
 )
@@ -42,25 +38,23 @@ func (msg *messageOfNewPkg) toCmd() app.CmdToCreatePR {
 }
 
 type messageOfApprovedPkg struct {
-	PkgId      string `json:"pkg_id"`
-	PkgName    string `json:"pkg_name"`
-	RelevantPR string `json:"pr"`
+	PRNum int `json:"pr_num"`
 }
 
-func (msg *messageOfApprovedPkg) toCmd() (cmd app.CmdToMergePR, err error) {
-	sp := strings.Split(strings.TrimSuffix(msg.RelevantPR, "/"), "/")
-	if len(sp) == 0 {
-		err = errors.New("relevant pr is empty")
-
-		return
+func (msg *messageOfApprovedPkg) toCmd() app.CmdToMergePR {
+	return app.CmdToMergePR{
+		PRNum: msg.PRNum,
 	}
-
-	prNumInt, err := strconv.Atoi(sp[len(sp)-1])
-	if err == nil {
-		cmd.PRNum = prNumInt
-	}
-
-	return
 }
 
-type messageOfRejectedPkg = messageOfApprovedPkg
+type messageOfRejectedPkg struct {
+	PRNum  int    `json:"pr_num"`
+	Reason string `json:"reason"`
+}
+
+func (msg *messageOfRejectedPkg) toCmd() app.CmdToClosePR {
+	return app.CmdToClosePR{
+		PRNum:  msg.PRNum,
+		Reason: msg.Reason,
+	}
+}

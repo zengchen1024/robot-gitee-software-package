@@ -9,6 +9,7 @@ type prCIFinishedEvent struct {
 	PkgName      string `json:"pkg_name"`
 	RelevantPR   string `json:"relevant_pr"`
 	FailedReason string `json:"failed_reason"`
+	PRNum        int    `json:"pr_num"`
 	Success      bool   `json:"success"`
 }
 
@@ -22,6 +23,7 @@ func NewPRCIFinishedEvent(pr *PullRequest, failedReason string) prCIFinishedEven
 		PkgName:      pr.Pkg.Name,
 		RelevantPR:   pr.Link,
 		FailedReason: failedReason,
+		PRNum:        pr.Num,
 		Success:      failedReason == "",
 	}
 }
@@ -64,6 +66,7 @@ func NewPRClosedEvent(pr *PullRequest, reason, rejectBy string) prClosedEvent {
 
 type prMergedEvent struct {
 	PkgId      string   `json:"pkg_id"`
+	PkgName    string   `json:"pkg_name"`
 	ApprovedBy []string `json:"approved_by"`
 }
 
@@ -74,6 +77,7 @@ func (e *prMergedEvent) Message() ([]byte, error) {
 func NewPRMergedEvent(pr *PullRequest, ApprovedBy []string) prMergedEvent {
 	return prMergedEvent{
 		PkgId:      pr.Pkg.Id,
+		PkgName:    pr.Pkg.Name,
 		ApprovedBy: ApprovedBy,
 	}
 }

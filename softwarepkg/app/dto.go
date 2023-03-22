@@ -17,7 +17,10 @@ type CmdToMergePR struct {
 	PRNum int
 }
 
-type CmdToClosePR = CmdToMergePR
+type CmdToClosePR struct {
+	PRNum  int
+	Reason string
+}
 
 type CmdToHandlePRMerged struct {
 	PRNum      int
