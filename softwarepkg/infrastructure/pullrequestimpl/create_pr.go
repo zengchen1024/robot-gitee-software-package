@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain"
@@ -91,6 +92,10 @@ func (impl *pullRequestImpl) newCreateRepoYaml() error {
 
 	content, err := impl.genNewRepoData()
 	if err != nil {
+		return err
+	}
+
+	if err = os.MkdirAll(filepath.Dir(fileName), 0755); err != nil {
 		return err
 	}
 
