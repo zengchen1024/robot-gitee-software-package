@@ -5,7 +5,7 @@ import (
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain"
 )
 
-type messageOfNewPkg struct {
+type msgToHandleNewPkg struct {
 	Importer          string `json:"importer"`
 	ImporterEmail     string `json:"importer_email"`
 	PkgId             string `json:"pkg_id"`
@@ -17,8 +17,8 @@ type messageOfNewPkg struct {
 	ReasonToImportPkg string `json:"reason_to_import"`
 }
 
-func (msg *messageOfNewPkg) toCmd() app.CmdToCreatePR {
-	return app.CmdToCreatePR{
+func (msg *msgToHandleNewPkg) toCmd() app.CmdToNewPkg {
+	return app.CmdToNewPkg{
 		SoftwarePkgBasic: domain.SoftwarePkgBasic{
 			Id:   msg.PkgId,
 			Name: msg.PkgName,
@@ -34,27 +34,5 @@ func (msg *messageOfNewPkg) toCmd() app.CmdToCreatePR {
 			ImportingPkgSig:   msg.ImportingPkgSig,
 			ReasonToImportPkg: msg.ReasonToImportPkg,
 		},
-	}
-}
-
-type messageOfApprovedPkg struct {
-	PRNum int `json:"pr_num"`
-}
-
-func (msg *messageOfApprovedPkg) toCmd() app.CmdToMergePR {
-	return app.CmdToMergePR{
-		PRNum: msg.PRNum,
-	}
-}
-
-type messageOfRejectedPkg struct {
-	PRNum  int    `json:"pr_num"`
-	Reason string `json:"reason"`
-}
-
-func (msg *messageOfRejectedPkg) toCmd() app.CmdToClosePR {
-	return app.CmdToClosePR{
-		PRNum:  msg.PRNum,
-		Reason: msg.Reason,
 	}
 }
