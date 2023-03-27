@@ -47,35 +47,37 @@ func (s *pullRequestService) HandleCI(cmd *CmdToHandleCI) error {
 	}
 
 	if cmd.isSuccess() {
-		s.handleSuccess(pr, cmd)
+		if err := s.mergePR(pr); err != nil {
+			cmd.FailedReason = err.Error()
+			s.notifyException(&pr, cmd)
+		}
 	} else {
-		s.ciFailedSendEmail(&pr, cmd)
-	}
-
-	if cmd.isPkgExisted() {
-		if err = s.prCli.Close(&pr); err != nil {
-			logrus.Errorf("close pr failed: %s", err.Error())
+		if cmd.isPkgExisted() {
+			if err = s.prCli.Close(&pr); err != nil {
+				logrus.Errorf("close pr failed: %s", err.Error())
+			}
+		} else {
+			s.notifyException(&pr, cmd)
 		}
 	}
 
 	e := domain.NewPRCIFinishedEvent(&pr, cmd.FailedReason, cmd.RepoLink)
+
 	return s.producer.NotifyCIResult(&e)
 }
 
-func (s *pullRequestService) handleSuccess(pr domain.PullRequest, cmd *CmdToHandleCI) {
+func (s *pullRequestService) mergePR(pr domain.PullRequest) error {
 	if err := s.prCli.Merge(&pr); err != nil {
-		cmd.FailedReason = "merge pr failed"
-		logrus.Errorf("merge pr failed: %s", err.Error())
-
-		return
+		return fmt.Errorf("merge pr(%d) failed: %s", pr.Num, err.Error())
 	}
 
 	pr.SetMerged()
 
 	if err := s.repo.Save(&pr); err != nil {
-		cmd.FailedReason = "save pr failed"
-		logrus.Errorf("save pr failed: %s", err.Error())
+		logrus.Errorf("save pr(%d) failed: %s", pr.Num, err.Error())
 	}
+
+	return nil
 }
 
 func (s *pullRequestService) HandleRepoCreated(pr *domain.PullRequest, url string) error {
@@ -117,7 +119,7 @@ func (s *pullRequestService) HandlePRClosed(cmd *CmdToHandlePRClosed) error {
 	return s.repo.Remove(pr.Num)
 }
 
-func (s *pullRequestService) ciFailedSendEmail(
+func (s *pullRequestService) notifyException(
 	pr *domain.PullRequest, cmd *CmdToHandleCI,
 ) {
 	subject := fmt.Sprintf(

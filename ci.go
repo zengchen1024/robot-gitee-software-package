@@ -18,34 +18,26 @@ func (bot *robot) handleCILabel(e *sdk.PullRequestEvent, cfg *botConfig) error {
 		}
 	}
 
+	cmd := app.CmdToHandleCI{
+		PRNum: int(e.Number),
+	}
+
 	labels := e.PullRequest.LabelsToSet()
 
 	if labels.Has(cfg.CILabel.Success) {
-		cmd := bot.ciCmd(e.Number, "", "")
-		if err := bot.prService.HandleCI(&cmd); err != nil {
-			return err
-		}
+		return bot.prService.HandleCI(&cmd)
 	}
 
 	if labels.Has(cfg.CILabel.Fail) {
-		cmd := bot.ciCmd(e.Number, "", "ci check failed")
+		cmd.FailedReason = "ci check failed"
+
 		if v, err := bot.cli.GetRepo(bot.PkgSrcOrg, dpr.Pkg.Name); err == nil {
 			cmd.RepoLink = v.HtmlUrl
 			cmd.FailedReason = "package already exists"
 		}
 
-		if err = bot.prService.HandleCI(&cmd); err != nil {
-			return err
-		}
+		return bot.prService.HandleCI(&cmd)
 	}
 
 	return nil
-}
-
-func (bot *robot) ciCmd(num int64, link, reason string) app.CmdToHandleCI {
-	return app.CmdToHandleCI{
-		PRNum:        int(num),
-		RepoLink:     link,
-		FailedReason: reason,
-	}
 }
