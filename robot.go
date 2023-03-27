@@ -9,6 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/app"
+	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain/repository"
 )
 
 // TODO: set botName
@@ -16,18 +17,26 @@ const botName = "software-package"
 
 type iClient interface {
 	GetBot() (sdk.User, error)
+	GetRepo(org, repo string) (sdk.Project, error)
 }
 
-func newRobot(cli iClient, prService app.PullRequestService) *robot {
+func newRobot(
+	cli iClient, prService app.PullRequestService,
+	r repository.PullRequest, org string,
+) *robot {
 	return &robot{
 		cli:       cli,
 		prService: prService,
+		repo:      r,
+		PkgSrcOrg: org,
 	}
 }
 
 type robot struct {
 	cli       iClient
 	prService app.PullRequestService
+	repo      repository.PullRequest
+	PkgSrcOrg string
 }
 
 func (bot *robot) NewConfig() config.Config {

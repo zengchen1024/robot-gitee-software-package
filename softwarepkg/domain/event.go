@@ -6,25 +6,23 @@ const platformGitee = "gitee"
 
 type prCIFinishedEvent struct {
 	PkgId        string `json:"pkg_id"`
-	PkgName      string `json:"pkg_name"`
 	RelevantPR   string `json:"relevant_pr"`
+	RepoLink     string `json:"repo_link"`
 	FailedReason string `json:"failed_reason"`
-	PRNum        int    `json:"pr_num"`
-	Success      bool   `json:"success"`
 }
 
 func (e *prCIFinishedEvent) Message() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func NewPRCIFinishedEvent(pr *PullRequest, failedReason string) prCIFinishedEvent {
+func NewPRCIFinishedEvent(
+	pr *PullRequest, failedReason, repoLink string,
+) prCIFinishedEvent {
 	return prCIFinishedEvent{
 		PkgId:        pr.Pkg.Id,
-		PkgName:      pr.Pkg.Name,
 		RelevantPR:   pr.Link,
+		RepoLink:     repoLink,
 		FailedReason: failedReason,
-		PRNum:        pr.Num,
-		Success:      failedReason == "",
 	}
 }
 

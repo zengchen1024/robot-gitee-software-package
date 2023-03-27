@@ -6,7 +6,7 @@ import (
 )
 
 type MessageService interface {
-	NewPkg(*CmdToNewPkg) error
+	NewPkg(*CmdToHandleNewPkg) error
 }
 
 func NewMessageService(repo repository.PullRequest, prCli pullrequest.PullRequest,
@@ -22,7 +22,7 @@ type messageService struct {
 	prCli pullrequest.PullRequest
 }
 
-func (s *messageService) NewPkg(cmd *CmdToNewPkg) error {
+func (s *messageService) NewPkg(cmd *CmdToHandleNewPkg) error {
 	pr, err := s.prCli.Create(cmd)
 	if err != nil {
 		return err

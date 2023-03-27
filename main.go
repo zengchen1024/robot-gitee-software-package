@@ -92,7 +92,7 @@ func main() {
 	pullRequest := pullrequestimpl.NewPullRequestImpl(c, cfg.PullRequest)
 	repo := repositoryimpl.NewSoftwarePkgPR(&cfg.Postgresql.Config)
 
-	prService := app.NewPullRequestService(repo, message, email)
+	prService := app.NewPullRequestService(repo, message, email, pullRequest)
 	messageService := app.NewMessageService(repo, pullRequest)
 
 	watch := watchingimpl.NewWatchingImpl(cfg.Watch, c, repo, prService)
@@ -112,7 +112,7 @@ func main() {
 	}
 
 	// start
-	r := newRobot(c, prService)
+	r := newRobot(c, prService, repo, cfg.Watch.Org)
 
 	framework.Run(r, o.service)
 }

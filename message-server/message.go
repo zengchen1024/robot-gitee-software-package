@@ -17,8 +17,8 @@ type msgToHandleNewPkg struct {
 	ReasonToImportPkg string `json:"reason_to_import"`
 }
 
-func (msg *msgToHandleNewPkg) toCmd() app.CmdToNewPkg {
-	return app.CmdToNewPkg{
+func (msg *msgToHandleNewPkg) toCmd() app.CmdToHandleNewPkg {
+	return app.CmdToHandleNewPkg{
 		SoftwarePkgBasic: domain.SoftwarePkgBasic{
 			Id:   msg.PkgId,
 			Name: msg.PkgName,
