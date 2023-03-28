@@ -48,6 +48,10 @@ func (s softwarePkgPR) Find(num int) (domain.PullRequest, error) {
 
 	var res SoftwarePkgPRDO
 	if err := s.cli.GetRecord(&filter, &res); err != nil {
+		if s.cli.IsRowNotFound(err) {
+			err = repository.NewErrorResourceNotFound(err)
+		}
+
 		return domain.PullRequest{}, err
 	}
 

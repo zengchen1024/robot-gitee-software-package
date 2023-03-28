@@ -18,22 +18,11 @@ func (c *CmdToHandleCI) isPkgExisted() bool {
 	return c.RepoLink != ""
 }
 
-type CmdToMergePR struct {
-	PRNum int
-}
-
-type CmdToClosePR struct {
-	PRNum  int
-	Reason string
-}
-
 type CmdToHandlePRMerged struct {
-	PRNum      int
-	ApprovedBy []string
+	PRNum int
 }
 
 type CmdToHandlePRClosed struct {
 	PRNum      int
-	Reason     string
 	RejectedBy string
 }
