@@ -6,17 +6,24 @@ import (
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain"
 )
 
-func NewPullRequestImpl(cli iClient, cfg Config) *pullRequestImpl {
-	return &pullRequestImpl{
-		cli: cli,
-		cfg: cfg,
+func NewPullRequestImpl(cli iClient, cfg Config) (impl *pullRequestImpl, err error) {
+	v, err := cli.GetBot()
+	if err != nil {
+		return
 	}
+
+	impl = &pullRequestImpl{
+		cli:        cli,
+		cfg:        cfg,
+		robotLogin: v.Login,
+	}
+
+	return
 }
 
 type pullRequestImpl struct {
 	cli        iClient
 	cfg        Config
-	pkg        *domain.SoftwarePkg
 	robotLogin string
 }
 
@@ -30,25 +37,30 @@ type iClient interface {
 }
 
 func (impl *pullRequestImpl) Create(pkg *domain.SoftwarePkg) (pr domain.PullRequest, err error) {
-	impl.pkg = pkg
-
-	if err = impl.initRepo(); err != nil {
+	if err = impl.initRepo(pkg); err != nil {
 		return
 	}
 
-	if err = impl.newBranch(); err != nil {
+	if err = impl.newBranch(pkg); err != nil {
 		return
 	}
 
-	if err = impl.modifyFiles(); err != nil {
+	if err = impl.modifyFiles(pkg); err != nil {
 		return
 	}
 
-	if err = impl.commit(); err != nil {
+	if err = impl.commit(pkg); err != nil {
 		return
 	}
 
-	return impl.submit()
+	v, err := impl.submit(pkg)
+	if err != nil {
+		return
+	}
+
+	pr = impl.toPullRequest(&v, pkg)
+
+	return
 }
 
 func (impl *pullRequestImpl) Merge(pr *domain.PullRequest) error {

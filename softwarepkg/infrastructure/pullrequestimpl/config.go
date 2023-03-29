@@ -18,7 +18,7 @@ func (cfg *Config) SetDefault() {
 
 type RobotConfig struct {
 	Username string `json:"username" required:"true"`
-	Password string `json:"password" required:"true"`
+	Token    string `json:"token"    required:"true"`
 	Email    string `json:"email"    required:"true"`
 }
 

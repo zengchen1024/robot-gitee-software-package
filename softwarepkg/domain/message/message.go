@@ -7,4 +7,5 @@ type EventMessage interface {
 type SoftwarePkgMessage interface {
 	NotifyCIResult(EventMessage) error
 	NotifyRepoCreatedResult(EventMessage) error
+	NotifyCodePushedResult(EventMessage) error
 }

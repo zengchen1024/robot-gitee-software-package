@@ -1,8 +1,8 @@
 package domain
 
 type SoftwarePkgSourceCode struct {
-	Address string
-	License string
+	SpecURL   string
+	SrcRPMURL string
 }
 
 type SoftwarePkgApplication struct {
@@ -28,10 +28,13 @@ type SoftwarePkg struct {
 
 // PullRequest
 type PullRequest struct {
-	Num    int
-	Link   string
-	merged bool
-	Pkg    SoftwarePkgBasic
+	Num           int
+	Link          string
+	merged        bool
+	ImporterName  string
+	ImporterEmail string
+	Pkg           SoftwarePkgBasic
+	SrcCode       SoftwarePkgSourceCode
 }
 
 func (r *PullRequest) SetMerged() {

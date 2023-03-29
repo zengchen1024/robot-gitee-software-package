@@ -23,6 +23,10 @@ func (m *MessageImpl) NotifyRepoCreatedResult(e message.EventMessage) error {
 	return send(m.cfg.TopicsToNotify.CreatedRepo, e)
 }
 
+func (m *MessageImpl) NotifyCodePushedResult(e message.EventMessage) error {
+	return send(m.cfg.TopicsToNotify.PushedCode, e)
+}
+
 func send(topic string, v message.EventMessage) error {
 	body, err := v.Message()
 	if err != nil {

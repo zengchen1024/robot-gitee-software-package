@@ -23,7 +23,9 @@ func (s softwarePkgPR) Add(p *domain.PullRequest) error {
 	}
 
 	var do SoftwarePkgPRDO
-	s.toSoftwarePkgPRDO(p, u, &do)
+	if err = s.toSoftwarePkgPRDO(p, u, &do); err != nil {
+		return err
+	}
 
 	filter := SoftwarePkgPRDO{PkgId: u}
 
@@ -38,7 +40,9 @@ func (s softwarePkgPR) Save(p *domain.PullRequest) error {
 	filter := SoftwarePkgPRDO{PkgId: u}
 
 	var do SoftwarePkgPRDO
-	s.toSoftwarePkgPRDO(p, u, &do)
+	if err = s.toSoftwarePkgPRDO(p, u, &do); err != nil {
+		return err
+	}
 
 	return s.cli.UpdateRecord(&filter, &do)
 }
@@ -55,7 +59,7 @@ func (s softwarePkgPR) Find(num int) (domain.PullRequest, error) {
 		return domain.PullRequest{}, err
 	}
 
-	return res.toDomainPullRequest(), nil
+	return res.toDomainPullRequest()
 }
 
 func (s softwarePkgPR) FindAll(isMerged bool) ([]domain.PullRequest, error) {
@@ -80,7 +84,12 @@ func (s softwarePkgPR) FindAll(isMerged bool) ([]domain.PullRequest, error) {
 	var p = make([]domain.PullRequest, len(res))
 
 	for i := range res {
-		p[i] = res[i].toDomainPullRequest()
+		v, err := res[i].toDomainPullRequest()
+		if err != nil {
+			return nil, err
+		}
+
+		p[i] = v
 	}
 
 	return p, nil

@@ -11,8 +11,8 @@ type msgToHandleNewPkg struct {
 	PkgId             string `json:"pkg_id"`
 	PkgName           string `json:"pkg_name"`
 	PkgDesc           string `json:"pkg_desc"`
-	SourceCodeURL     string `json:"source_code_url"`
-	SourceCodeLicense string `json:"source_code_license"`
+	SpecURL           string `json:"spec_url"`
+	SrcRPMURL         string `json:"src_rpm_url"`
 	ImportingPkgSig   string `json:"sig"`
 	ReasonToImportPkg string `json:"reason_to_import"`
 }
@@ -27,8 +27,8 @@ func (msg *msgToHandleNewPkg) toCmd() app.CmdToHandleNewPkg {
 		ImporterEmail: msg.ImporterEmail,
 		Application: domain.SoftwarePkgApplication{
 			SourceCode: domain.SoftwarePkgSourceCode{
-				Address: msg.SourceCodeURL,
-				License: msg.SourceCodeLicense,
+				SpecURL:   msg.SpecURL,
+				SrcRPMURL: msg.SrcRPMURL,
 			},
 			PackageDesc:       msg.PkgDesc,
 			ImportingPkgSig:   msg.ImportingPkgSig,
