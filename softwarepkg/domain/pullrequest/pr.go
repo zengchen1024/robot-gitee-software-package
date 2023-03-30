@@ -4,7 +4,7 @@ import "github.com/opensourceways/robot-gitee-software-package/softwarepkg/domai
 
 type PullRequest interface {
 	Create(*domain.SoftwarePkg) (domain.PullRequest, error)
-	Merge(*domain.PullRequest) error
-	Close(*domain.PullRequest) error
-	Comment(*domain.PullRequest, string) error
+	Merge(int) error
+	Close(int) error
+	Comment(int, string) error
 }

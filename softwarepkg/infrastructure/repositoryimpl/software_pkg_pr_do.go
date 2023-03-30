@@ -24,22 +24,22 @@ type SoftwarePkgPRDO struct {
 	UpdatedAt     int64     `gorm:"column:updated_at"`
 }
 
-func (s softwarePkgPR) toSoftwarePkgPRDO(p *domain.PullRequest, id uuid.UUID, do *SoftwarePkgPRDO) error {
-	email, err := toEmailDO(p.ImporterEmail)
+func (s softwarePkgPR) toSoftwarePkgPRDO(p *domain.SoftwarePkg, id uuid.UUID, do *SoftwarePkgPRDO) error {
+	email, err := toEmailDO(p.Importer.Email)
 	if err != nil {
 		return err
 	}
 
 	*do = SoftwarePkgPRDO{
 		PkgId:         id,
-		Num:           p.Num,
+		Num:           p.PullRequest.Num,
 		Status:        p.Status,
-		Link:          p.Link,
-		PkgName:       p.Pkg.Name,
-		ImporterName:  p.ImporterName,
+		Link:          p.PullRequest.Link,
+		PkgName:       p.Name,
+		ImporterName:  p.Importer.Name,
 		ImporterEmail: email,
-		SpecURL:       p.SrcCode.SpecURL,
-		SrcRPMURL:     p.SrcCode.SrcRPMURL,
+		SpecURL:       p.Application.SourceCode.SpecURL,
+		SrcRPMURL:     p.Application.SourceCode.SrcRPMURL,
 		CreatedAt:     time.Now().Unix(),
 		UpdatedAt:     time.Now().Unix(),
 	}
@@ -47,19 +47,19 @@ func (s softwarePkgPR) toSoftwarePkgPRDO(p *domain.PullRequest, id uuid.UUID, do
 	return nil
 }
 
-func (do *SoftwarePkgPRDO) toDomainPullRequest() (pr domain.PullRequest, err error) {
-	if pr.ImporterEmail, err = toEmail(do.ImporterEmail); err != nil {
+func (do *SoftwarePkgPRDO) toDomainPullRequest() (pkg domain.SoftwarePkg, err error) {
+	if pkg.Importer.Email, err = toEmail(do.ImporterEmail); err != nil {
 		return
 	}
 
-	pr.Link = do.Link
-	pr.Num = do.Num
-	pr.Status = do.Status
-	pr.Pkg.Name = do.PkgName
-	pr.Pkg.Id = do.PkgId.String()
-	pr.ImporterName = do.ImporterName
-	pr.SrcCode.SpecURL = do.SpecURL
-	pr.SrcCode.SrcRPMURL = do.SrcRPMURL
+	pkg.PullRequest.Link = do.Link
+	pkg.PullRequest.Num = do.Num
+	pkg.Status = do.Status
+	pkg.Name = do.PkgName
+	pkg.Id = do.PkgId.String()
+	pkg.Importer.Name = do.ImporterName
+	pkg.Application.SourceCode.SpecURL = do.SpecURL
+	pkg.Application.SourceCode.SrcRPMURL = do.SrcRPMURL
 
 	return
 }

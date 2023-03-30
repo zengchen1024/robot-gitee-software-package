@@ -55,17 +55,18 @@ func (impl *pullRequestImpl) Create(pkg *domain.SoftwarePkg) (pr domain.PullRequ
 
 	v, err := impl.submit(pkg)
 	if err == nil {
-		pr = impl.toPullRequest(&v, pkg)
+		pr.Num = int(v.Number)
+		pr.Link = v.HtmlUrl
 	}
 
 	return
 }
 
-func (impl *pullRequestImpl) Merge(pr *domain.PullRequest) error {
+func (impl *pullRequestImpl) Merge(prNum int) error {
 	org := impl.cfg.PR.Org
 	repo := impl.cfg.PR.Repo
 
-	v, err := impl.cli.GetGiteePullRequest(org, repo, int32(pr.Num))
+	v, err := impl.cli.GetGiteePullRequest(org, repo, int32(prNum))
 	if err != nil {
 		return err
 	}
@@ -74,15 +75,14 @@ func (impl *pullRequestImpl) Merge(pr *domain.PullRequest) error {
 		return nil
 	}
 
-	return impl.cli.MergePR(org, repo, int32(pr.Num), sdk.PullRequestMergePutParam{})
+	return impl.cli.MergePR(org, repo, int32(prNum), sdk.PullRequestMergePutParam{})
 }
 
-func (impl *pullRequestImpl) Close(pr *domain.PullRequest) error {
+func (impl *pullRequestImpl) Close(prNum int) error {
 	org := impl.cfg.PR.Org
 	repo := impl.cfg.PR.Repo
-	prNum := int32(pr.Num)
 
-	prDetail, err := impl.cli.GetGiteePullRequest(org, repo, prNum)
+	prDetail, err := impl.cli.GetGiteePullRequest(org, repo, int32(prNum))
 	if err != nil {
 		return err
 	}
@@ -91,12 +91,12 @@ func (impl *pullRequestImpl) Close(pr *domain.PullRequest) error {
 		return nil
 	}
 
-	return impl.cli.ClosePR(org, repo, prNum)
+	return impl.cli.ClosePR(org, repo, int32(prNum))
 }
 
-func (impl *pullRequestImpl) Comment(pr *domain.PullRequest, content string) error {
+func (impl *pullRequestImpl) Comment(prNum int, content string) error {
 	return impl.cli.CreatePRComment(
 		impl.cfg.PR.Org, impl.cfg.PR.Repo,
-		int32(pr.Num), content,
+		int32(prNum), content,
 	)
 }

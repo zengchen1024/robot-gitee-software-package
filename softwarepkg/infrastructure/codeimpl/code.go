@@ -28,17 +28,17 @@ type codeImpl struct {
 	script string
 }
 
-func (impl *codeImpl) Push(pr *domain.PullRequest) error {
-	repoUrl := fmt.Sprintf("%s%s.git", impl.gitUrl, pr.Pkg.Name)
+func (impl *codeImpl) Push(pkg *domain.SoftwarePkg) error {
+	repoUrl := fmt.Sprintf("%s%s.git", impl.gitUrl, pkg.Name)
 
 	params := []string{
 		impl.script,
 		repoUrl,
-		pr.Pkg.Name,
-		pr.ImporterName,
-		pr.ImporterEmail,
-		pr.SrcCode.SpecURL,
-		pr.SrcCode.SrcRPMURL,
+		pkg.Name,
+		pkg.Importer.Name,
+		pkg.Importer.Email,
+		pkg.Application.SourceCode.SpecURL,
+		pkg.Application.SourceCode.SrcRPMURL,
 	}
 
 	_, err, _ := utils.RunCmd(params...)

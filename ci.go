@@ -8,7 +8,7 @@ import (
 )
 
 func (bot *robot) handleCILabel(e *sdk.PullRequestEvent, cfg *botConfig) error {
-	dpr, err := bot.repo.Find(int(e.Number))
+	pkg, err := bot.repo.Find(int(e.Number))
 	if err != nil {
 		if repository.IsErrorResourceNotFound(err) {
 			err = nil
@@ -30,7 +30,7 @@ func (bot *robot) handleCILabel(e *sdk.PullRequestEvent, cfg *botConfig) error {
 	if labels.Has(cfg.CILabel.Fail) {
 		cmd.FailedReason = "ci check failed"
 
-		if v, err := bot.cli.GetRepo(bot.PkgSrcOrg, dpr.Pkg.Name); err == nil {
+		if v, err := bot.cli.GetRepo(bot.PkgSrcOrg, pkg.Name); err == nil {
 			cmd.RepoLink = v.HtmlUrl
 			cmd.FailedReason = "package already exists"
 		}

@@ -23,8 +23,10 @@ func (msg *msgToHandleNewPkg) toCmd() app.CmdToHandleNewPkg {
 			Id:   msg.PkgId,
 			Name: msg.PkgName,
 		},
-		ImporterName:  msg.Importer,
-		ImporterEmail: msg.ImporterEmail,
+		Importer: domain.Importer{
+			Name:  msg.Importer,
+			Email: msg.ImporterEmail,
+		},
 		Application: domain.SoftwarePkgApplication{
 			SourceCode: domain.SoftwarePkgSourceCode{
 				SpecURL:   msg.SpecURL,

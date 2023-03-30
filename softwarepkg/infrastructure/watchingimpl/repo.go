@@ -14,7 +14,7 @@ import (
 
 func NewWatchingImpl(
 	cfg Config, cli iClient,
-	repo repository.PullRequest, prService app.PullRequestService,
+	repo repository.SoftwarePkg, prService app.PullRequestService,
 ) *WatchingImpl {
 	return &WatchingImpl{
 		cfg:       cfg,
@@ -31,7 +31,7 @@ type iClient interface {
 type WatchingImpl struct {
 	cfg       Config
 	cli       iClient
-	repo      repository.PullRequest
+	repo      repository.SoftwarePkg
 	prService app.PullRequestService
 }
 
@@ -67,20 +67,20 @@ func (impl *WatchingImpl) Start(ctx context.Context, stop chan struct{}) {
 	}
 }
 
-func (impl *WatchingImpl) handle(pr domain.PullRequest) {
-	switch pr.Status {
-	case domain.StatusPRMerged:
-		v, err := impl.cli.GetRepo(impl.cfg.Org, pr.Pkg.Name)
+func (impl *WatchingImpl) handle(pkg domain.SoftwarePkg) {
+	switch pkg.Status {
+	case domain.PkgStatusPRMerged:
+		v, err := impl.cli.GetRepo(impl.cfg.Org, pkg.Name)
 		if err != nil {
 			return
 		}
 
-		if err = impl.prService.HandleRepoCreated(&pr, v.HtmlUrl); err != nil {
+		if err = impl.prService.HandleRepoCreated(&pkg, v.HtmlUrl); err != nil {
 			logrus.Errorf("handle repo created err: %s", err.Error())
 		}
 
-	case domain.StatusRepoCreated:
-		if err := impl.prService.HandlePushCode(&pr); err != nil {
+	case domain.PkgStatusRepoCreated:
+		if err := impl.prService.HandlePushCode(&pkg); err != nil {
 			logrus.Errorf("handle push code err: %s", err.Error())
 		}
 	}

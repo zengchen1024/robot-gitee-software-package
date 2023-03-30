@@ -117,8 +117,8 @@ func (impl *pullRequestImpl) genAppendSigInfoData(pkg *domain.SoftwarePkg) (stri
 		Importer      string
 	}{
 		PkgName:       pkg.Name,
-		ImporterEmail: pkg.ImporterEmail,
-		Importer:      pkg.ImporterName,
+		ImporterEmail: pkg.Importer.Email,
+		Importer:      pkg.Importer.Name,
 	}
 
 	return impl.genTemplate(impl.cfg.Template.AppendSigInfo, data)
@@ -163,20 +163,4 @@ func (impl *pullRequestImpl) submit(pkg *domain.SoftwarePkg) (pr sdk.PullRequest
 		impl.cfg.PR.Org, impl.cfg.PR.Repo, prName,
 		pkg.Application.ReasonToImportPkg, head, "master", true,
 	)
-}
-
-func (impl *pullRequestImpl) toPullRequest(
-	pr *sdk.PullRequest, pkg *domain.SoftwarePkg,
-) domain.PullRequest {
-	return domain.PullRequest{
-		Num:           int(pr.Number),
-		Link:          pr.HtmlUrl,
-		Pkg:           pkg.SoftwarePkgBasic,
-		ImporterName:  pkg.ImporterName,
-		ImporterEmail: pkg.ImporterEmail,
-		SrcCode: domain.SoftwarePkgSourceCode{
-			SpecURL:   pkg.Application.SourceCode.SpecURL,
-			SrcRPMURL: pkg.Application.SourceCode.SrcRPMURL,
-		},
-	}
 }

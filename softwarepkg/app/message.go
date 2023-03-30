@@ -9,7 +9,7 @@ type MessageService interface {
 	NewPkg(*CmdToHandleNewPkg) error
 }
 
-func NewMessageService(repo repository.PullRequest, prCli pullrequest.PullRequest,
+func NewMessageService(repo repository.SoftwarePkg, prCli pullrequest.PullRequest,
 ) *messageService {
 	return &messageService{
 		repo:  repo,
@@ -18,7 +18,7 @@ func NewMessageService(repo repository.PullRequest, prCli pullrequest.PullReques
 }
 
 type messageService struct {
-	repo  repository.PullRequest
+	repo  repository.SoftwarePkg
 	prCli pullrequest.PullRequest
 }
 
@@ -28,7 +28,9 @@ func (s *messageService) NewPkg(cmd *CmdToHandleNewPkg) error {
 		return err
 	}
 
-	pr.SetStatusInitialized()
+	cmd.PullRequest = pr
 
-	return s.repo.Add(&pr)
+	cmd.SetPkgStatusInitialized()
+
+	return s.repo.Add(cmd)
 }

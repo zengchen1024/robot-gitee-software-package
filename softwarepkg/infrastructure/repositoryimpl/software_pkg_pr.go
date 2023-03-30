@@ -12,12 +12,12 @@ type softwarePkgPR struct {
 	cli dbClient
 }
 
-func NewSoftwarePkgPR(cfg *Config) repository.PullRequest {
+func NewSoftwarePkgPR(cfg *Config) repository.SoftwarePkg {
 	return softwarePkgPR{cli: postgresql.NewDBTable(cfg.Table.SoftwarePkgPR)}
 }
 
-func (s softwarePkgPR) Add(p *domain.PullRequest) error {
-	u, err := uuid.Parse(p.Pkg.Id)
+func (s softwarePkgPR) Add(p *domain.SoftwarePkg) error {
+	u, err := uuid.Parse(p.Id)
 	if err != nil {
 		return err
 	}
@@ -32,8 +32,8 @@ func (s softwarePkgPR) Add(p *domain.PullRequest) error {
 	return s.cli.Insert(&filter, &do)
 }
 
-func (s softwarePkgPR) Save(p *domain.PullRequest) error {
-	u, err := uuid.Parse(p.Pkg.Id)
+func (s softwarePkgPR) Save(p *domain.SoftwarePkg) error {
+	u, err := uuid.Parse(p.Id)
 	if err != nil {
 		return err
 	}
@@ -47,7 +47,7 @@ func (s softwarePkgPR) Save(p *domain.PullRequest) error {
 	return s.cli.UpdateRecord(&filter, &do)
 }
 
-func (s softwarePkgPR) Find(num int) (domain.PullRequest, error) {
+func (s softwarePkgPR) Find(num int) (domain.SoftwarePkg, error) {
 	filter := SoftwarePkgPRDO{Num: num}
 
 	var res SoftwarePkgPRDO
@@ -56,13 +56,13 @@ func (s softwarePkgPR) Find(num int) (domain.PullRequest, error) {
 			err = repository.NewErrorResourceNotFound(err)
 		}
 
-		return domain.PullRequest{}, err
+		return domain.SoftwarePkg{}, err
 	}
 
 	return res.toDomainPullRequest()
 }
 
-func (s softwarePkgPR) FindAll() ([]domain.PullRequest, error) {
+func (s softwarePkgPR) FindAll() ([]domain.SoftwarePkg, error) {
 	filter := SoftwarePkgPRDO{}
 
 	var res []SoftwarePkgPRDO
@@ -76,7 +76,7 @@ func (s softwarePkgPR) FindAll() ([]domain.PullRequest, error) {
 		return nil, err
 	}
 
-	var p = make([]domain.PullRequest, len(res))
+	var p = make([]domain.SoftwarePkg, len(res))
 
 	for i := range res {
 		v, err := res[i].toDomainPullRequest()

@@ -15,14 +15,14 @@ import (
 
 type PullRequestService interface {
 	HandleCI(cmd *CmdToHandleCI) error
-	HandleRepoCreated(*domain.PullRequest, string) error
+	HandleRepoCreated(*domain.SoftwarePkg, string) error
 	HandlePRMerged(cmd *CmdToHandlePRMerged) error
 	HandlePRClosed(cmd *CmdToHandlePRClosed) error
-	HandlePushCode(pr *domain.PullRequest) error
+	HandlePushCode(*domain.SoftwarePkg) error
 }
 
 func NewPullRequestService(
-	r repository.PullRequest,
+	r repository.SoftwarePkg,
 	p message.SoftwarePkgMessage,
 	e email.Email,
 	c pullrequest.PullRequest,
@@ -38,7 +38,7 @@ func NewPullRequestService(
 }
 
 type pullRequestService struct {
-	repo     repository.PullRequest
+	repo     repository.SoftwarePkg
 	producer message.SoftwarePkgMessage
 	email    email.Email
 	prCli    pullrequest.PullRequest
@@ -46,74 +46,83 @@ type pullRequestService struct {
 }
 
 func (s *pullRequestService) HandleCI(cmd *CmdToHandleCI) error {
-	pr, err := s.repo.Find(cmd.PRNum)
+	pkg, err := s.repo.Find(cmd.PRNum)
 	if err != nil {
 		return err
 	}
 
 	if cmd.isSuccess() {
-		if err := s.mergePR(pr); err != nil {
+		if err := s.mergePR(pkg); err != nil {
 			cmd.FailedReason = err.Error()
-			s.notifyException(&pr, cmd)
+			s.notifyException(&pkg, cmd)
 		}
 	} else {
 		if cmd.isPkgExisted() {
-			s.closePR(pr)
+			s.closePR(pkg)
 		} else {
-			s.notifyException(&pr, cmd)
+			s.notifyException(&pkg, cmd)
 		}
 	}
 
-	e := domain.NewPRCIFinishedEvent(&pr, cmd.FailedReason, cmd.RepoLink)
+	e := domain.PRCIFinishedEvent{
+		PkgId:        pkg.Id,
+		RelevantPR:   pkg.PullRequest.Link,
+		RepoLink:     cmd.RepoLink,
+		FailedReason: cmd.FailedReason,
+	}
 
 	return s.producer.NotifyCIResult(&e)
 }
 
-func (s *pullRequestService) mergePR(pr domain.PullRequest) error {
-	if err := s.prCli.Merge(&pr); err != nil {
-		return fmt.Errorf("merge pr(%d) failed: %s", pr.Num, err.Error())
+func (s *pullRequestService) mergePR(pkg domain.SoftwarePkg) error {
+	if err := s.prCli.Merge(pkg.PullRequest.Num); err != nil {
+		return fmt.Errorf("merge pr(%d) failed: %s", pkg.PullRequest.Num, err.Error())
 	}
 
-	pr.SetStatusMerged()
+	pkg.SetPkgStatusMerged()
 
-	if err := s.repo.Save(&pr); err != nil {
-		logrus.Errorf("save pr(%d) failed: %s", pr.Num, err.Error())
+	if err := s.repo.Save(&pkg); err != nil {
+		logrus.Errorf("save pr(%d) failed: %s", pkg.PullRequest.Num, err.Error())
 	}
 
 	return nil
 }
 
-func (s *pullRequestService) closePR(pr domain.PullRequest) {
-	if err := s.prCli.Close(&pr); err != nil {
-		logrus.Errorf("close pr/%d failed: %s", pr.Num, err.Error())
+func (s *pullRequestService) closePR(pkg domain.SoftwarePkg) {
+	if err := s.prCli.Close(pkg.PullRequest.Num); err != nil {
+		logrus.Errorf("close pr/%d failed: %s", pkg.PullRequest.Num, err.Error())
 	}
 
-	if err := s.repo.Remove(pr.Num); err != nil {
-		logrus.Errorf("remove pr/%d failed: %s", pr.Num, err.Error())
+	if err := s.repo.Remove(pkg.PullRequest.Num); err != nil {
+		logrus.Errorf("remove pr/%d failed: %s", pkg.PullRequest.Num, err.Error())
 	}
 }
 
-func (s *pullRequestService) HandleRepoCreated(pr *domain.PullRequest, url string) error {
-	pr.SetStatusRepoCreated()
+func (s *pullRequestService) HandleRepoCreated(pkg *domain.SoftwarePkg, url string) error {
+	pkg.SetPkgStatusRepoCreated()
 
-	if err := s.repo.Save(pr); err != nil {
+	if err := s.repo.Save(pkg); err != nil {
 		return err
 	}
 
-	e := domain.NewRepoCreatedEvent(pr, url, "")
+	e := domain.RepoCreatedEvent{
+		PkgId:    pkg.Id,
+		Platform: domain.PlatformGitee,
+		RepoLink: url,
+	}
 
 	return s.producer.NotifyRepoCreatedResult(&e)
 }
 
-func (s *pullRequestService) HandlePushCode(pr *domain.PullRequest) error {
-	if err := s.code.Push(pr); err != nil {
-		logrus.Errorf("pkgId %s push code err: %s", pr.Pkg.Id, err.Error())
+func (s *pullRequestService) HandlePushCode(pkg *domain.SoftwarePkg) error {
+	if err := s.code.Push(pkg); err != nil {
+		logrus.Errorf("pkgId %s push code err: %s", pkg.Id, err.Error())
 
 		return err
 	}
 
 	e := domain.CodePushedEvent{
-		PkgId:    pr.Pkg.Id,
+		PkgId:    pkg.Id,
 		Platform: domain.PlatformGitee,
 	}
 
@@ -121,35 +130,35 @@ func (s *pullRequestService) HandlePushCode(pr *domain.PullRequest) error {
 		return err
 	}
 
-	return s.repo.Remove(pr.Num)
+	return s.repo.Remove(pkg.PullRequest.Num)
 }
 
 func (s *pullRequestService) HandlePRMerged(cmd *CmdToHandlePRMerged) error {
-	pr, err := s.repo.Find(cmd.PRNum)
+	pkg, err := s.repo.Find(cmd.PRNum)
 	if err != nil {
 		return err
 	}
 
-	if pr.IsStatusMerged() {
+	if pkg.IsPkgStatusMerged() {
 		return nil
 	}
 
 	e := domain.PRCIFinishedEvent{
-		PkgId:      pr.Pkg.Id,
-		RelevantPR: pr.Link,
+		PkgId:      pkg.Id,
+		RelevantPR: pkg.PullRequest.Link,
 	}
 
 	if err = s.producer.NotifyCIResult(&e); err != nil {
 		return err
 	}
 
-	pr.SetStatusMerged()
+	pkg.SetPkgStatusMerged()
 
-	return s.repo.Save(&pr)
+	return s.repo.Save(&pkg)
 }
 
 func (s *pullRequestService) HandlePRClosed(cmd *CmdToHandlePRClosed) error {
-	pr, err := s.repo.Find(cmd.PRNum)
+	pkg, err := s.repo.Find(cmd.PRNum)
 	if err != nil {
 		return err
 	}
@@ -158,7 +167,7 @@ func (s *pullRequestService) HandlePRClosed(cmd *CmdToHandlePRClosed) error {
 		"the pr of software package was closed by: %s",
 		cmd.RejectedBy,
 	)
-	content := s.emailContent(pr.Link)
+	content := s.emailContent(pkg.PullRequest.Link)
 
 	if err = s.email.Send(subject, content); err != nil {
 		logrus.Errorf("send email failed: %s", err.Error())
@@ -172,13 +181,13 @@ func (s *pullRequestService) emailContent(url string) string {
 }
 
 func (s *pullRequestService) notifyException(
-	pr *domain.PullRequest, cmd *CmdToHandleCI,
+	pkg *domain.SoftwarePkg, cmd *CmdToHandleCI,
 ) {
 	subject := fmt.Sprintf(
 		"the ci of software package check failed: %s",
 		cmd.FailedReason,
 	)
-	content := s.emailContent(pr.Link)
+	content := s.emailContent(pkg.PullRequest.Link)
 
 	if err := s.email.Send(subject, content); err != nil {
 		logrus.Errorf("send email failed: %s", err.Error())

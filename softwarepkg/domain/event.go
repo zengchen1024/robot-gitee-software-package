@@ -15,17 +15,6 @@ func (e *PRCIFinishedEvent) Message() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func NewPRCIFinishedEvent(
-	pr *PullRequest, failedReason, repoLink string,
-) PRCIFinishedEvent {
-	return PRCIFinishedEvent{
-		PkgId:        pr.Pkg.Id,
-		RelevantPR:   pr.Link,
-		RepoLink:     repoLink,
-		FailedReason: failedReason,
-	}
-}
-
 type RepoCreatedEvent struct {
 	PkgId        string `json:"pkg_id"`
 	Platform     string `json:"platform"`
@@ -35,15 +24,6 @@ type RepoCreatedEvent struct {
 
 func (e *RepoCreatedEvent) Message() ([]byte, error) {
 	return json.Marshal(e)
-}
-
-func NewRepoCreatedEvent(pr *PullRequest, url, reason string) RepoCreatedEvent {
-	return RepoCreatedEvent{
-		PkgId:        pr.Pkg.Id,
-		Platform:     PlatformGitee,
-		RepoLink:     url,
-		FailedReason: reason,
-	}
 }
 
 type CodePushedEvent = RepoCreatedEvent
