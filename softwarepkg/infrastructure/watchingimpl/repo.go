@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/app"
+	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain/repository"
 )
 
@@ -47,28 +48,13 @@ func (impl *WatchingImpl) Start(ctx context.Context, stop chan struct{}) {
 	}
 
 	for {
-		prs, err := impl.repo.FindAll(true)
+		prs, err := impl.repo.FindAll()
 		if err != nil {
 			logrus.Errorf("find all storage pr failed, err: %s", err.Error())
 		}
 
 		for _, pr := range prs {
-			if !pr.IsMerged() {
-				continue
-			}
-
-			v, err := impl.cli.GetRepo(impl.cfg.Org, pr.Pkg.Name)
-			if err != nil {
-				continue
-			}
-
-			if err = impl.prService.HandleRepoCreated(&pr, v.HtmlUrl); err != nil {
-				logrus.Errorf("handle repo created err: %s", err.Error())
-			} else {
-				if err = impl.prService.HandlePushCode(&pr); err != nil {
-					logrus.Errorf("handle push code err: %s", err.Error())
-				}
-			}
+			impl.handle(pr)
 
 			if checkStop() {
 				close(stop)
@@ -78,5 +64,24 @@ func (impl *WatchingImpl) Start(ctx context.Context, stop chan struct{}) {
 		}
 
 		time.Sleep(interval)
+	}
+}
+
+func (impl *WatchingImpl) handle(pr domain.PullRequest) {
+	switch pr.Status {
+	case domain.StatusPRMerged:
+		v, err := impl.cli.GetRepo(impl.cfg.Org, pr.Pkg.Name)
+		if err != nil {
+			return
+		}
+
+		if err = impl.prService.HandleRepoCreated(&pr, v.HtmlUrl); err != nil {
+			logrus.Errorf("handle repo created err: %s", err.Error())
+		}
+
+	case domain.StatusRepoCreated:
+		if err := impl.prService.HandlePushCode(&pr); err != nil {
+			logrus.Errorf("handle push code err: %s", err.Error())
+		}
 	}
 }

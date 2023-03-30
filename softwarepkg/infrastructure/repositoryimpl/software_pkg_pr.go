@@ -62,13 +62,8 @@ func (s softwarePkgPR) Find(num int) (domain.PullRequest, error) {
 	return res.toDomainPullRequest()
 }
 
-func (s softwarePkgPR) FindAll(isMerged bool) ([]domain.PullRequest, error) {
+func (s softwarePkgPR) FindAll() ([]domain.PullRequest, error) {
 	filter := SoftwarePkgPRDO{}
-	if isMerged {
-		filter.Merged = mergedStatus
-	} else {
-		filter.Merged = unMergedStatus
-	}
 
 	var res []SoftwarePkgPRDO
 

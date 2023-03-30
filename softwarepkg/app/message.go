@@ -28,5 +28,7 @@ func (s *messageService) NewPkg(cmd *CmdToHandleNewPkg) error {
 		return err
 	}
 
+	pr.SetStatusInitialized()
+
 	return s.repo.Add(&pr)
 }

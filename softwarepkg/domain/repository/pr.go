@@ -6,6 +6,6 @@ type PullRequest interface {
 	Add(*domain.PullRequest) error
 	Save(*domain.PullRequest) error
 	Find(int) (domain.PullRequest, error)
-	FindAll(isMerged bool) ([]domain.PullRequest, error)
+	FindAll() ([]domain.PullRequest, error)
 	Remove(int) error
 }

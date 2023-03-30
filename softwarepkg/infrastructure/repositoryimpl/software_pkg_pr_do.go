@@ -9,18 +9,13 @@ import (
 	"github.com/opensourceways/robot-gitee-software-package/utils"
 )
 
-const (
-	mergedStatus   = 1
-	unMergedStatus = 2
-)
-
 type SoftwarePkgPRDO struct {
 	// must set "uuid" as the name of column
 	PkgId         uuid.UUID `gorm:"column:uuid;type:uuid"`
 	Link          string    `gorm:"column:link"`
 	PkgName       string    `gorm:"column:pkg_name"`
 	Num           int       `gorm:"column:num"`
-	Merged        int       `gorm:"column:merge"`
+	Status        string    `gorm:"column:status"`
 	ImporterName  string    `gorm:"column:importer_name"`
 	ImporterEmail string    `gorm:"column:importer_email"`
 	SpecURL       string    `gorm:"column:spec_url"`
@@ -29,15 +24,16 @@ type SoftwarePkgPRDO struct {
 	UpdatedAt     int64     `gorm:"column:updated_at"`
 }
 
-func (s softwarePkgPR) toSoftwarePkgPRDO(p *domain.PullRequest, id uuid.UUID, do *SoftwarePkgPRDO) (err error) {
+func (s softwarePkgPR) toSoftwarePkgPRDO(p *domain.PullRequest, id uuid.UUID, do *SoftwarePkgPRDO) error {
 	email, err := toEmailDO(p.ImporterEmail)
 	if err != nil {
-		return
+		return err
 	}
 
 	*do = SoftwarePkgPRDO{
 		PkgId:         id,
 		Num:           p.Num,
+		Status:        p.Status,
 		Link:          p.Link,
 		PkgName:       p.Pkg.Name,
 		ImporterName:  p.ImporterName,
@@ -48,13 +44,7 @@ func (s softwarePkgPR) toSoftwarePkgPRDO(p *domain.PullRequest, id uuid.UUID, do
 		UpdatedAt:     time.Now().Unix(),
 	}
 
-	if p.IsMerged() {
-		do.Merged = mergedStatus
-	} else {
-		do.Merged = unMergedStatus
-	}
-
-	return
+	return nil
 }
 
 func (do *SoftwarePkgPRDO) toDomainPullRequest() (pr domain.PullRequest, err error) {
@@ -64,11 +54,7 @@ func (do *SoftwarePkgPRDO) toDomainPullRequest() (pr domain.PullRequest, err err
 
 	pr.Link = do.Link
 	pr.Num = do.Num
-
-	if do.Merged == mergedStatus {
-		pr.SetMerged()
-	}
-
+	pr.Status = do.Status
 	pr.Pkg.Name = do.PkgName
 	pr.Pkg.Id = do.PkgId.String()
 	pr.ImporterName = do.ImporterName

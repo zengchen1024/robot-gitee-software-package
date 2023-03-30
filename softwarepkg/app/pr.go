@@ -74,7 +74,7 @@ func (s *pullRequestService) mergePR(pr domain.PullRequest) error {
 		return fmt.Errorf("merge pr(%d) failed: %s", pr.Num, err.Error())
 	}
 
-	pr.SetMerged()
+	pr.SetStatusMerged()
 
 	if err := s.repo.Save(&pr); err != nil {
 		logrus.Errorf("save pr(%d) failed: %s", pr.Num, err.Error())
@@ -94,6 +94,12 @@ func (s *pullRequestService) closePR(pr domain.PullRequest) {
 }
 
 func (s *pullRequestService) HandleRepoCreated(pr *domain.PullRequest, url string) error {
+	pr.SetStatusRepoCreated()
+
+	if err := s.repo.Save(pr); err != nil {
+		return err
+	}
+
 	e := domain.NewRepoCreatedEvent(pr, url, "")
 
 	return s.producer.NotifyRepoCreatedResult(&e)
@@ -124,7 +130,7 @@ func (s *pullRequestService) HandlePRMerged(cmd *CmdToHandlePRMerged) error {
 		return err
 	}
 
-	if pr.IsMerged() {
+	if pr.IsStatusMerged() {
 		return nil
 	}
 
@@ -137,7 +143,7 @@ func (s *pullRequestService) HandlePRMerged(cmd *CmdToHandlePRMerged) error {
 		return err
 	}
 
-	pr.SetMerged()
+	pr.SetStatusMerged()
 
 	return s.repo.Save(&pr)
 }
