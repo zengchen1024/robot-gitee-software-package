@@ -37,23 +37,11 @@ type iClient interface {
 }
 
 func (impl *pullRequestImpl) Create(pkg *domain.SoftwarePkg) (pr domain.PullRequest, err error) {
-	if err = impl.initRepo(pkg); err != nil {
+	if err = impl.createBranch(pkg); err != nil {
 		return
 	}
 
-	if err = impl.newBranch(pkg); err != nil {
-		return
-	}
-
-	if err = impl.modifyFiles(pkg); err != nil {
-		return
-	}
-
-	if err = impl.commit(pkg); err != nil {
-		return
-	}
-
-	v, err := impl.submit(pkg)
+	v, err := impl.createPR(pkg)
 	if err == nil {
 		pr.Num = int(v.Number)
 		pr.Link = v.HtmlUrl
