@@ -115,7 +115,8 @@ func (s *pullRequestService) HandleRepoCreated(pkg *domain.SoftwarePkg, url stri
 }
 
 func (s *pullRequestService) HandlePushCode(pkg *domain.SoftwarePkg) error {
-	if err := s.code.Push(pkg); err != nil {
+	repoUrl, err := s.code.Push(pkg)
+	if err != nil {
 		logrus.Errorf("pkgId %s push code err: %s", pkg.Id, err.Error())
 
 		return err
@@ -124,9 +125,10 @@ func (s *pullRequestService) HandlePushCode(pkg *domain.SoftwarePkg) error {
 	e := domain.CodePushedEvent{
 		PkgId:    pkg.Id,
 		Platform: domain.PlatformGitee,
+		RepoLink: repoUrl,
 	}
 
-	if err := s.producer.NotifyCodePushedResult(&e); err != nil {
+	if err = s.producer.NotifyCodePushedResult(&e); err != nil {
 		return err
 	}
 

@@ -3,22 +3,24 @@
 set -euo pipefail
 
 init() {
-    if [ -d $repo_dir ]; then
+    if [ -d $repo ]; then
        return
     fi
 
     git clone --depth=1 $repo_url
-    cd $repo_dir
+    cd $repo
 
     git config user.name $git_user
     git config user.email $git_email
     git config --global pack.threads 1
 
     git remote add upstream ${upstream}
+
+    cd ..
 }
 
 new_branch() {
-    cd  $repo_dir
+    cd $repo
 
     git checkout -- .
     git clean -fd
@@ -32,8 +34,6 @@ new_branch() {
 }
 
 modify() {
-  cd $repo_dir
-
   echo "$sig_info_content" >> $sig_info_file
 
   dn=$(dirname $new_repo_file)
@@ -45,8 +45,6 @@ modify() {
 }
 
 commit() {
-    cd $repo_dir
-
     git add .
 
     git commit -m 'apply new package'
@@ -69,7 +67,6 @@ new_repo_content=${10}
 
 upstream=https://gitee.com/${org}/${repo}.git
 repo_url=https://${git_user}:${git_token}@gitee.com/${git_user}/${repo}.git
-repo_dir=$(pwd)/${repo}
 
 init
 
