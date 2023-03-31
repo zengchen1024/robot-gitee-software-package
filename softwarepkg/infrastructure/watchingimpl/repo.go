@@ -14,7 +14,7 @@ import (
 
 func NewWatchingImpl(
 	cfg Config, cli iClient,
-	repo repository.SoftwarePkg, prService app.PullRequestService,
+	repo repository.SoftwarePkg, prService app.PackageService,
 ) *WatchingImpl {
 	return &WatchingImpl{
 		cfg:       cfg,
@@ -32,7 +32,7 @@ type WatchingImpl struct {
 	cfg       Config
 	cli       iClient
 	repo      repository.SoftwarePkg
-	prService app.PullRequestService
+	prService app.PackageService
 }
 
 func (impl *WatchingImpl) Start(ctx context.Context, stop chan struct{}) {

@@ -21,7 +21,7 @@ type iClient interface {
 }
 
 func newRobot(
-	cli iClient, prService app.PullRequestService,
+	cli iClient, prService app.PackageService,
 	r repository.SoftwarePkg, org string,
 ) *robot {
 	return &robot{
@@ -34,7 +34,7 @@ func newRobot(
 
 type robot struct {
 	cli       iClient
-	prService app.PullRequestService
+	prService app.PackageService
 	repo      repository.SoftwarePkg
 	PkgSrcOrg string
 }

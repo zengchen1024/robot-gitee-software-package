@@ -107,10 +107,10 @@ func main() {
 	repo := repositoryimpl.NewSoftwarePkgPR(&cfg.Postgresql.Config)
 	code := codeimpl.NewCodeImpl(cfg.Code)
 
-	prService := app.NewPullRequestService(repo, message, email, pullRequest, code)
+	packageService := app.NewPackageService(repo, message, email, pullRequest, code)
 	messageService := app.NewMessageService(repo, pullRequest)
 
-	watch := watchingimpl.NewWatchingImpl(cfg.Watch, c, repo, prService)
+	watch := watchingimpl.NewWatchingImpl(cfg.Watch, c, repo, packageService)
 	ctx, cancel := context.WithCancel(context.Background())
 	stop := make(chan struct{})
 	go watch.Start(ctx, stop)
@@ -127,7 +127,7 @@ func main() {
 	}
 
 	// start
-	r := newRobot(c, prService, repo, cfg.Watch.Org)
+	r := newRobot(c, packageService, repo, cfg.Watch.Org)
 
 	framework.Run(r, o.service)
 }

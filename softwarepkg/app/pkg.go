@@ -13,7 +13,7 @@ import (
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain/repository"
 )
 
-type PullRequestService interface {
+type PackageService interface {
 	HandleCI(cmd *CmdToHandleCI) error
 	HandleRepoCreated(*domain.SoftwarePkg, string) error
 	HandlePRMerged(cmd *CmdToHandlePRMerged) error
@@ -21,14 +21,14 @@ type PullRequestService interface {
 	HandlePushCode(*domain.SoftwarePkg) error
 }
 
-func NewPullRequestService(
+func NewPackageService(
 	r repository.SoftwarePkg,
 	p message.SoftwarePkgMessage,
 	e email.Email,
 	c pullrequest.PullRequest,
 	cd code.Code,
-) *pullRequestService {
-	return &pullRequestService{
+) *packageService {
+	return &packageService{
 		repo:     r,
 		producer: p,
 		email:    e,
@@ -37,7 +37,7 @@ func NewPullRequestService(
 	}
 }
 
-type pullRequestService struct {
+type packageService struct {
 	repo     repository.SoftwarePkg
 	producer message.SoftwarePkgMessage
 	email    email.Email
@@ -45,7 +45,7 @@ type pullRequestService struct {
 	code     code.Code
 }
 
-func (s *pullRequestService) HandleCI(cmd *CmdToHandleCI) error {
+func (s *packageService) HandleCI(cmd *CmdToHandleCI) error {
 	pkg, err := s.repo.Find(cmd.PRNum)
 	if err != nil {
 		return err
@@ -74,7 +74,7 @@ func (s *pullRequestService) HandleCI(cmd *CmdToHandleCI) error {
 	return s.producer.NotifyCIResult(&e)
 }
 
-func (s *pullRequestService) mergePR(pkg domain.SoftwarePkg) error {
+func (s *packageService) mergePR(pkg domain.SoftwarePkg) error {
 	if err := s.prCli.Merge(pkg.PullRequest.Num); err != nil {
 		return fmt.Errorf("merge pr(%d) failed: %s", pkg.PullRequest.Num, err.Error())
 	}
@@ -88,7 +88,7 @@ func (s *pullRequestService) mergePR(pkg domain.SoftwarePkg) error {
 	return nil
 }
 
-func (s *pullRequestService) closePR(pkg domain.SoftwarePkg) {
+func (s *packageService) closePR(pkg domain.SoftwarePkg) {
 	if err := s.prCli.Close(pkg.PullRequest.Num); err != nil {
 		logrus.Errorf("close pr/%d failed: %s", pkg.PullRequest.Num, err.Error())
 	}
@@ -98,23 +98,22 @@ func (s *pullRequestService) closePR(pkg domain.SoftwarePkg) {
 	}
 }
 
-func (s *pullRequestService) HandleRepoCreated(pkg *domain.SoftwarePkg, url string) error {
-	pkg.SetPkgStatusRepoCreated()
-
-	if err := s.repo.Save(pkg); err != nil {
-		return err
-	}
-
+func (s *packageService) HandleRepoCreated(pkg *domain.SoftwarePkg, url string) error {
 	e := domain.RepoCreatedEvent{
 		PkgId:    pkg.Id,
 		Platform: domain.PlatformGitee,
 		RepoLink: url,
 	}
+	if err := s.producer.NotifyRepoCreatedResult(&e); err != nil {
+		return err
+	}
 
-	return s.producer.NotifyRepoCreatedResult(&e)
+	pkg.SetPkgStatusRepoCreated()
+
+	return s.repo.Save(pkg)
 }
 
-func (s *pullRequestService) HandlePushCode(pkg *domain.SoftwarePkg) error {
+func (s *packageService) HandlePushCode(pkg *domain.SoftwarePkg) error {
 	repoUrl, err := s.code.Push(pkg)
 	if err != nil {
 		logrus.Errorf("pkgId %s push code err: %s", pkg.Id, err.Error())
@@ -135,7 +134,7 @@ func (s *pullRequestService) HandlePushCode(pkg *domain.SoftwarePkg) error {
 	return s.repo.Remove(pkg.PullRequest.Num)
 }
 
-func (s *pullRequestService) HandlePRMerged(cmd *CmdToHandlePRMerged) error {
+func (s *packageService) HandlePRMerged(cmd *CmdToHandlePRMerged) error {
 	pkg, err := s.repo.Find(cmd.PRNum)
 	if err != nil {
 		return err
@@ -159,7 +158,7 @@ func (s *pullRequestService) HandlePRMerged(cmd *CmdToHandlePRMerged) error {
 	return s.repo.Save(&pkg)
 }
 
-func (s *pullRequestService) HandlePRClosed(cmd *CmdToHandlePRClosed) error {
+func (s *packageService) HandlePRClosed(cmd *CmdToHandlePRClosed) error {
 	pkg, err := s.repo.Find(cmd.PRNum)
 	if err != nil {
 		return err
@@ -178,11 +177,11 @@ func (s *pullRequestService) HandlePRClosed(cmd *CmdToHandlePRClosed) error {
 	return nil
 }
 
-func (s *pullRequestService) emailContent(url string) string {
+func (s *packageService) emailContent(url string) string {
 	return fmt.Sprintf("th pr url is: %s", url)
 }
 
-func (s *pullRequestService) notifyException(
+func (s *packageService) notifyException(
 	pkg *domain.SoftwarePkg, cmd *CmdToHandleCI,
 ) {
 	subject := fmt.Sprintf(
