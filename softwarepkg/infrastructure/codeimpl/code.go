@@ -17,15 +17,22 @@ func NewCodeImpl(cfg Config) *codeImpl {
 		cfg.PkgSrcOrg,
 	)
 
+	repoUrl := fmt.Sprintf(
+		"https://gitee.com/%s/",
+		cfg.PkgSrcOrg,
+	)
+
 	return &codeImpl{
-		gitUrl: gitUrl,
-		script: cfg.ShellScript,
+		gitUrl:  gitUrl,
+		repoUrl: repoUrl,
+		script:  cfg.ShellScript,
 	}
 }
 
 type codeImpl struct {
-	gitUrl string
-	script string
+	gitUrl  string
+	repoUrl string
+	script  string
 }
 
 func (impl *codeImpl) Push(pkg *domain.SoftwarePkg) (string, error) {
@@ -49,5 +56,5 @@ func (impl *codeImpl) Push(pkg *domain.SoftwarePkg) (string, error) {
 		)
 	}
 
-	return repoUrl, err
+	return impl.repoUrl + pkg.Name, err
 }
