@@ -50,11 +50,11 @@ func (impl *pullRequestImpl) createBranch(pkg *domain.SoftwarePkg) error {
 		newRepoData,
 	}
 
-	_, err, _ = utils.RunCmd(params...)
+	out, err, _ := utils.RunCmd(params...)
 	if err != nil {
 		logrus.Errorf(
-			"run create pr shell, err=%s, params=%v",
-			err.Error(), params[:len(params)-1],
+			"run create pr shell, err=%s, out=%s, params=%v",
+			err.Error(), string(out), params[:len(params)-1],
 		)
 	}
 
