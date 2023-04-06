@@ -138,9 +138,10 @@ func run(cfg *config.Config, cli client.Client) {
 
 	// watch
 	w := watch.NewWatchingImpl(cfg.Watch, cli, repo, packageService)
-
+	w.Start()
 	defer w.Stop()
 
+	// wait
 	wait()
 }
 
