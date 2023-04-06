@@ -21,8 +21,8 @@ func NewEventHandler(
 	cfg *Config,
 	repo repository.SoftwarePkg,
 	service app.PackageService,
-) *robot {
-	return &robot{
+) *eventHandler {
+	return &eventHandler{
 		cli:     cli,
 		cfg:     *cfg,
 		repo:    repo,
@@ -30,28 +30,25 @@ func NewEventHandler(
 	}
 }
 
-type robot struct {
+type eventHandler struct {
 	cli     iClient
 	cfg     Config
 	repo    repository.SoftwarePkg
 	service app.PackageService
 }
 
-func (bot *robot) HandlePREvent(e *sdk.PullRequestEvent) error {
-	org, repo := e.GetOrgRepo()
-	if bot.cfg.isCommunity(org, repo) {
+func (impl *eventHandler) HandlePREvent(e *sdk.PullRequestEvent) error {
+	if org, repo := e.GetOrgRepo(); !impl.cfg.isCommunity(org, repo) {
 		return nil
 	}
 
-	prState := e.GetPullRequest().GetState()
-
-	if prState != sdk.StatusOpen {
-		return bot.handlePRState(e)
+	if e.GetPullRequest().GetState() != sdk.StatusOpen {
+		return impl.handlePRState(e)
 	}
 
-	if sdk.GetPullRequestAction(e) != sdk.PRActionUpdatedLabel {
-		return nil
+	if sdk.GetPullRequestAction(e) == sdk.PRActionUpdatedLabel {
+		return impl.handleCILabel(e)
 	}
 
-	return bot.handleCILabel(e)
+	return nil
 }

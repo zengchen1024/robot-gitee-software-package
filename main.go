@@ -75,7 +75,7 @@ func main() {
 
 	cli := client.NewClient(secretAgent.GetTokenGenerator(o.gitee.TokenPath))
 
-	// side car
+	// cfg
 	cfg, err := config.LoadConfig(o.service.ConfigFile)
 	if err != nil {
 		logrus.Errorf("load config failed, err:%s", err.Error())
@@ -83,12 +83,21 @@ func main() {
 		return
 	}
 
+	// postgresql
 	if err = postgresql.Init(&cfg.Postgresql.DB); err != nil {
 		logrus.Errorf("init db failed, err:%s", err.Error())
 
 		return
 	}
 
+	// encryption
+	if err = utils.InitEncryption(cfg.Encryption.EncryptionKey); err != nil {
+		logrus.Errorf("init encryption failed, err:%s", err.Error())
+
+		return
+	}
+
+	// kafka
 	if err = kafka.Init(&cfg.Kafka, log); err != nil {
 		logrus.Errorf("init kafka failed, err:%s", err.Error())
 
@@ -97,12 +106,7 @@ func main() {
 
 	defer kafka.Exit()
 
-	if err = utils.InitEncryption(cfg.Encryption.EncryptionKey); err != nil {
-		logrus.Errorf("init encryption failed, err:%s", err.Error())
-
-		return
-	}
-
+	// run
 	run(cfg, cli)
 }
 
@@ -131,7 +135,7 @@ func run(cfg *config.Config, cli client.Client) {
 		community.NewEventHandler(cli, &cfg.Community, repo, packageService),
 	)
 	if err != nil {
-		logrus.Errorf("start side car failed, err:%s", err.Error())
+		logrus.Errorf("init message server failed, err:%s", err.Error())
 
 		return
 	}

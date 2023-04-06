@@ -7,8 +7,8 @@ import (
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain/repository"
 )
 
-func (bot *robot) handleCILabel(e *sdk.PullRequestEvent) error {
-	pkg, err := bot.repo.Find(int(e.Number))
+func (impl *eventHandler) handleCILabel(e *sdk.PullRequestEvent) error {
+	pkg, err := impl.repo.Find(int(e.Number))
 	if err != nil {
 		if repository.IsErrorResourceNotFound(err) {
 			err = nil
@@ -22,21 +22,21 @@ func (bot *robot) handleCILabel(e *sdk.PullRequestEvent) error {
 	}
 
 	labels := e.PullRequest.LabelsToSet()
-	cfg := &bot.cfg
+	cfg := &impl.cfg
 
 	if labels.Has(cfg.CISuccessLabel) {
-		return bot.service.HandleCI(&cmd)
+		return impl.service.HandleCI(&cmd)
 	}
 
 	if labels.Has(cfg.CIFailureLabel) {
 		cmd.FailedReason = "ci check failed"
 
-		if v, err := bot.cli.GetRepo(cfg.PkgOrg, pkg.Name); err == nil {
+		if v, err := impl.cli.GetRepo(cfg.PkgOrg, pkg.Name); err == nil {
 			cmd.RepoLink = v.HtmlUrl
 			cmd.FailedReason = "package already exists"
 		}
 
-		return bot.service.HandleCI(&cmd)
+		return impl.service.HandleCI(&cmd)
 	}
 
 	return nil

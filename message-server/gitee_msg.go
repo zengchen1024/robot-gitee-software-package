@@ -1,7 +1,6 @@
 package messageserver
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -31,12 +30,12 @@ func (msg *giteeEventHandler) handle(payload []byte, header map[string]string) e
 		return errors.New("not pr event")
 	}
 
-	e := new(sdk.PullRequestEvent)
-	if err = json.Unmarshal(payload, e); err != nil {
+	e, err := sdk.ConvertToPREvent(payload)
+	if err != nil {
 		return err
 	}
 
-	return msg.handler.HandlePREvent(e)
+	return msg.handler.HandlePREvent(&e)
 }
 
 func (msg *giteeEventHandler) parseRequest(header map[string]string) (
