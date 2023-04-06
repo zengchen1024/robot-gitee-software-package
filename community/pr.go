@@ -1,4 +1,4 @@
-package main
+package community
 
 import (
 	sdk "github.com/opensourceways/go-gitee/gitee"

@@ -2,19 +2,21 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 
+	kafka "github.com/opensourceways/kafka-lib/agent"
 	"github.com/opensourceways/robot-gitee-lib/client"
-	"github.com/opensourceways/robot-gitee-lib/framework"
 	"github.com/opensourceways/server-common-lib/logrusutil"
 	liboptions "github.com/opensourceways/server-common-lib/options"
 	"github.com/opensourceways/server-common-lib/secret"
 	"github.com/sirupsen/logrus"
 
+	"github.com/opensourceways/robot-gitee-software-package/community"
 	"github.com/opensourceways/robot-gitee-software-package/config"
-	"github.com/opensourceways/robot-gitee-software-package/kafka"
 	"github.com/opensourceways/robot-gitee-software-package/message-server"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/app"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/codeimpl"
@@ -23,23 +25,18 @@ import (
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/postgresql"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/pullrequestimpl"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/repositoryimpl"
-	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/watchingimpl"
+	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/watch"
 	"github.com/opensourceways/robot-gitee-software-package/utils"
 )
 
 type options struct {
-	service       liboptions.ServiceOptions
-	gitee         liboptions.GiteeOptions
-	MsgConfigFile string
+	service liboptions.ServiceOptions
+	gitee   liboptions.GiteeOptions
 }
 
 func (o *options) Validate() error {
 	if err := o.service.Validate(); err != nil {
 		return err
-	}
-
-	if o.MsgConfigFile == "" {
-		return errors.New("missing message config file")
 	}
 
 	return o.gitee.Validate()
@@ -50,43 +47,54 @@ func gatherOptions(fs *flag.FlagSet, args ...string) options {
 
 	o.gitee.AddFlags(fs)
 	o.service.AddFlags(fs)
-	fs.StringVar(&o.MsgConfigFile, "msg-config-file", "", "Path to message config file.")
 
 	fs.Parse(args)
+
 	return o
 }
 
 func main() {
-	logrusutil.ComponentInit(botName)
+	logrusutil.ComponentInit("software-package")
 	log := logrus.NewEntry(logrus.StandardLogger())
 
 	o := gatherOptions(flag.NewFlagSet(os.Args[0], flag.ExitOnError), os.Args[1:]...)
 	if err := o.Validate(); err != nil {
-		logrus.WithError(err).Fatal("Invalid options")
+		logrus.Errorf("Invalid options, err:%s", err.Error())
+
+		return
 	}
 
 	secretAgent := new(secret.Agent)
 	if err := secretAgent.Start([]string{o.gitee.TokenPath}); err != nil {
-		logrus.WithError(err).Fatal("Error starting secret agent.")
+		logrus.Errorf("Error starting secret agenti, err:%s.", err.Error())
+
+		return
 	}
 
 	defer secretAgent.Stop()
 
-	c := client.NewClient(secretAgent.GetTokenGenerator(o.gitee.TokenPath))
+	cli := client.NewClient(secretAgent.GetTokenGenerator(o.gitee.TokenPath))
 
 	// side car
-	cfg, err := config.LoadConfig(o.MsgConfigFile)
+	cfg, err := config.LoadConfig(o.service.ConfigFile)
 	if err != nil {
-		logrus.Fatalf("load config failed, err:%s", err.Error())
+		logrus.Errorf("load config failed, err:%s", err.Error())
+
+		return
 	}
 
 	if err = postgresql.Init(&cfg.Postgresql.DB); err != nil {
-		logrus.Fatalf("init db failed, err:%s", err.Error())
+		logrus.Errorf("init db failed, err:%s", err.Error())
+
+		return
 	}
 
-	if err = kafka.Init(&cfg.MQ, log); err != nil {
-		logrus.Fatalf("init kafka failed, err:%s", err.Error())
+	if err = kafka.Init(&cfg.Kafka, log); err != nil {
+		logrus.Errorf("init kafka failed, err:%s", err.Error())
+
+		return
 	}
+
 	defer kafka.Exit()
 
 	if err = utils.InitEncryption(cfg.Encryption.EncryptionKey); err != nil {
@@ -95,39 +103,80 @@ func main() {
 		return
 	}
 
-	pullRequest, err := pullrequestimpl.NewPullRequestImpl(c, cfg.PullRequest)
+	run(cfg, cli)
+}
+
+func run(cfg *config.Config, cli client.Client) {
+	pullRequest, err := pullrequestimpl.NewPullRequestImpl(cli, cfg.PullRequest)
 	if err != nil {
 		logrus.Errorf("init pullRequest failed, err:%s", err.Error())
 
 		return
 	}
 
-	email := emailimpl.NewEmailService(cfg.Email)
-	message := messageimpl.NewMessageImpl(cfg.MessageServer.Message)
 	repo := repositoryimpl.NewSoftwarePkgPR(&cfg.Postgresql.Config)
-	code := codeimpl.NewCodeImpl(cfg.Code)
 
-	packageService := app.NewPackageService(repo, message, email, pullRequest, code)
-	messageService := app.NewMessageService(repo, pullRequest)
-
-	watch := watchingimpl.NewWatchingImpl(cfg.Watch, c, repo, packageService)
-	ctx, cancel := context.WithCancel(context.Background())
-	stop := make(chan struct{})
-	go watch.Start(ctx, stop)
-	defer func() {
-		cancel()
-		<-stop
-		logrus.Info("watch exit normally")
-	}()
+	packageService := app.NewPackageService(
+		repo,
+		messageimpl.NewMessageImpl(cfg.MessageServer.Message),
+		emailimpl.NewEmailService(cfg.Email),
+		pullRequest,
+		codeimpl.NewCodeImpl(cfg.Code),
+	)
 
 	// message server
-	ms := messageserver.Init(messageService)
+	ms := messageserver.Init(
+		app.NewMessageService(repo, pullRequest),
+		community.NewEventHandler(cli, &cfg.Community, repo, packageService),
+	)
+
 	if err := ms.Subscribe(&cfg.MessageServer); err != nil {
-		logrus.Fatalf("start side car failed, err:%s", err.Error())
+		logrus.Errorf("start side car failed, err:%s", err.Error())
+
+		return
 	}
 
-	// start
-	r := newRobot(c, packageService, repo, cfg.Watch.Org)
+	// watch
+	w := watch.NewWatchingImpl(cfg.Watch, cli, repo, packageService)
 
-	framework.Run(r, o.service)
+	defer w.Stop()
+
+	wait()
+}
+
+func wait() {
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
+
+	var wg sync.WaitGroup
+	defer wg.Wait()
+
+	called := false
+	ctx, done := context.WithCancel(context.Background())
+
+	defer func() {
+		if !called {
+			called = true
+			done()
+		}
+	}()
+
+	wg.Add(1)
+	go func(ctx context.Context) {
+		defer wg.Done()
+
+		select {
+		case <-ctx.Done():
+			logrus.Info("receive done. exit normally")
+			return
+
+		case <-sig:
+			logrus.Info("receive exit signal")
+			called = true
+			done()
+			return
+		}
+	}(ctx)
+
+	<-ctx.Done()
 }

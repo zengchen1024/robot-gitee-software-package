@@ -1,4 +1,4 @@
-package watchingimpl
+package watch
 
 import "time"
 
