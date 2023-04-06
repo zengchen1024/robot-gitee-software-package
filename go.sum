@@ -143,6 +143,8 @@ github.com/opensourceways/kafka-lib v0.0.0-20230208095708-dcdb61015d05 h1:V4BSIP
 github.com/opensourceways/kafka-lib v0.0.0-20230208095708-dcdb61015d05/go.mod h1:tULp+c90imokR0lbQP+Jmeeih4zwtWxXnNQftVT5Lt8=
 github.com/opensourceways/kafka-lib v0.0.0-20230406024718-ae4db59506fd h1:tNDXmDKjAFeGQeFBkl3n49+AKYumEjmiwYkwVGVX7/g=
 github.com/opensourceways/kafka-lib v0.0.0-20230406024718-ae4db59506fd/go.mod h1:tULp+c90imokR0lbQP+Jmeeih4zwtWxXnNQftVT5Lt8=
+github.com/opensourceways/kafka-lib v0.0.0-20230406092848-cefa19b4d680 h1:ZoxLCfwkP6k8VPIgmZZD5loKHThD/OFl52Sh8TJU7+4=
+github.com/opensourceways/kafka-lib v0.0.0-20230406092848-cefa19b4d680/go.mod h1:tULp+c90imokR0lbQP+Jmeeih4zwtWxXnNQftVT5Lt8=
 github.com/opensourceways/robot-gitee-lib v0.0.0-20230301074041-fc39b0bb6e72 h1:rQWBH6eQrr+0K2a8CXVMiOIIb84im6r+9rccc4CaC44=
 github.com/opensourceways/robot-gitee-lib v0.0.0-20230301074041-fc39b0bb6e72/go.mod h1:Q4RDKbIhM+mOrXnDkeChGErGsPwhD4rUZkPOv4iX6pc=
 github.com/opensourceways/server-common-lib v0.0.0-20230208064916-61fc43dfb8db h1:syzeracFtgfmSWpKvhhvx46RcjsZSjdubbVWO83eDA8=

@@ -23,7 +23,7 @@ func (bot *robot) handlePRState(e *sdk.PullRequestEvent) error {
 			PRNum: int(e.Number),
 		}
 
-		return bot.prService.HandlePRMerged(&cmd)
+		return bot.service.HandlePRMerged(&cmd)
 	case sdk.StatusClosed:
 		r, err := bot.cli.GetBot()
 		if err != nil {
@@ -36,7 +36,7 @@ func (bot *robot) handlePRState(e *sdk.PullRequestEvent) error {
 		}
 
 		cmd := bot.closedPrCmd(e.Number, updateBy)
-		return bot.prService.HandlePRClosed(&cmd)
+		return bot.service.HandlePRClosed(&cmd)
 	default:
 		return nil
 	}

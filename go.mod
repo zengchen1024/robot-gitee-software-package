@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/google/uuid v1.3.0
 	github.com/opensourceways/go-gitee v0.0.0-20220714075315-cb246f1dfb96
-	github.com/opensourceways/kafka-lib v0.0.0-20230406024718-ae4db59506fd
+	github.com/opensourceways/kafka-lib v0.0.0-20230406092848-cefa19b4d680
 	github.com/opensourceways/robot-gitee-lib v0.0.0-20230301074041-fc39b0bb6e72
 	github.com/opensourceways/server-common-lib v0.0.0-20230208064916-61fc43dfb8db
 	github.com/sirupsen/logrus v1.9.0

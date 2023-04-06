@@ -125,12 +125,12 @@ func run(cfg *config.Config, cli client.Client) {
 	)
 
 	// message server
-	ms := messageserver.Init(
+	err = messageserver.Init(
+		&cfg.MessageServer,
 		app.NewMessageService(repo, pullRequest),
 		community.NewEventHandler(cli, &cfg.Community, repo, packageService),
 	)
-
-	if err := ms.Subscribe(&cfg.MessageServer); err != nil {
+	if err != nil {
 		logrus.Errorf("start side car failed, err:%s", err.Error())
 
 		return

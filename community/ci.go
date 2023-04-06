@@ -25,7 +25,7 @@ func (bot *robot) handleCILabel(e *sdk.PullRequestEvent) error {
 	cfg := &bot.cfg
 
 	if labels.Has(cfg.CISuccessLabel) {
-		return bot.prService.HandleCI(&cmd)
+		return bot.service.HandleCI(&cmd)
 	}
 
 	if labels.Has(cfg.CIFailureLabel) {
@@ -36,7 +36,7 @@ func (bot *robot) handleCILabel(e *sdk.PullRequestEvent) error {
 			cmd.FailedReason = "package already exists"
 		}
 
-		return bot.prService.HandleCI(&cmd)
+		return bot.service.HandleCI(&cmd)
 	}
 
 	return nil

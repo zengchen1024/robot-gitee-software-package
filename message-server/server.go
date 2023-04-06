@@ -10,13 +10,16 @@ import (
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/app"
 )
 
-func Init(service app.MessageService, handler community.EventHandler) messageServer {
-	return messageServer{
+func Init(cfg *Config, service app.MessageService, handler community.EventHandler) error {
+	s := messageServer{
 		service: service,
 		handler: giteeEventHandler{
-			handler: handler,
+			handler:   handler,
+			userAgent: cfg.UserAgent,
 		},
 	}
+
+	return s.subscribe(cfg)
 }
 
 type messageServer struct {
@@ -24,7 +27,7 @@ type messageServer struct {
 	handler giteeEventHandler
 }
 
-func (m *messageServer) Subscribe(cfg *Config) error {
+func (m *messageServer) subscribe(cfg *Config) error {
 	subscribers := map[string]kafka.Handler{
 		cfg.Topics.NewPkg:         m.handleNewPkg,
 		cfg.Topics.CommunityEvent: m.handler.handle,
@@ -33,7 +36,7 @@ func (m *messageServer) Subscribe(cfg *Config) error {
 	return kafka.Subscribe(cfg.GroupName, subscribers)
 }
 
-func (m *messageServer) handleNewPkg(msg []byte) error {
+func (m *messageServer) handleNewPkg(msg []byte, header map[string]string) error {
 	if len(msg) == 0 {
 		return errors.New("unexpect message: The payload is empty")
 	}

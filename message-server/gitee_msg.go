@@ -11,10 +11,9 @@ import (
 )
 
 const (
-	eventTypePush      = "push"
-	msgHeaderUUID      = "X-GitHub-Delivery"
+	msgHeaderUUID      = "X-Gitee-Timestamp"
 	msgHeaderUserAgent = "User-Agent"
-	msgHeaderEventType = "X-GitHub-Event"
+	msgHeaderEventType = "X-Gitee-Event"
 )
 
 type giteeEventHandler struct {
@@ -28,8 +27,8 @@ func (msg *giteeEventHandler) handle(payload []byte, header map[string]string) e
 		return fmt.Errorf("invalid msg, err:%s", err.Error())
 	}
 
-	if eventType != eventTypePush {
-		return errors.New("not pushed event")
+	if eventType != sdk.EventTypePR {
+		return errors.New("not pr event")
 	}
 
 	e := new(sdk.PullRequestEvent)
