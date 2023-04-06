@@ -1,7 +1,6 @@
-package watchingimpl
+package watch
 
 import (
-	"context"
 	"time"
 
 	sdk "github.com/opensourceways/go-gitee/gitee"
@@ -13,14 +12,18 @@ import (
 )
 
 func NewWatchingImpl(
-	cfg Config, cli iClient,
-	repo repository.SoftwarePkg, prService app.PackageService,
+	cfg Config,
+	cli iClient,
+	repo repository.SoftwarePkg,
+	service app.PackageService,
 ) *WatchingImpl {
 	return &WatchingImpl{
-		cfg:       cfg,
-		cli:       cli,
-		repo:      repo,
-		prService: prService,
+		cfg:     cfg,
+		cli:     cli,
+		repo:    repo,
+		service: service,
+		stop:    make(chan struct{}),
+		stopped: make(chan struct{}),
 	}
 }
 
@@ -29,18 +32,30 @@ type iClient interface {
 }
 
 type WatchingImpl struct {
-	cfg       Config
-	cli       iClient
-	repo      repository.SoftwarePkg
-	prService app.PackageService
+	cfg     Config
+	cli     iClient
+	repo    repository.SoftwarePkg
+	service app.PackageService
+	stop    chan struct{}
+	stopped chan struct{}
 }
 
-func (impl *WatchingImpl) Start(ctx context.Context, stop chan struct{}) {
+func (impl *WatchingImpl) Start() {
+	go impl.watch()
+}
+
+func (impl *WatchingImpl) Stop() {
+	close(impl.stop)
+
+	<-impl.stopped
+}
+
+func (impl *WatchingImpl) watch() {
 	interval := impl.cfg.IntervalDuration()
 
 	checkStop := func() bool {
 		select {
-		case <-ctx.Done():
+		case <-impl.stop:
 			return true
 		default:
 			return false
@@ -57,7 +72,7 @@ func (impl *WatchingImpl) Start(ctx context.Context, stop chan struct{}) {
 			impl.handle(pr)
 
 			if checkStop() {
-				close(stop)
+				close(impl.stopped)
 
 				return
 			}
@@ -75,12 +90,12 @@ func (impl *WatchingImpl) handle(pkg domain.SoftwarePkg) {
 			return
 		}
 
-		if err = impl.prService.HandleRepoCreated(&pkg, v.HtmlUrl); err != nil {
+		if err = impl.service.HandleRepoCreated(&pkg, v.HtmlUrl); err != nil {
 			logrus.Errorf("handle repo created err: %s", err.Error())
 		}
 
 	case domain.PkgStatusRepoCreated:
-		if err := impl.prService.HandlePushCode(&pkg); err != nil {
+		if err := impl.service.HandlePushCode(&pkg); err != nil {
 			logrus.Errorf("handle push code err: %s", err.Error())
 		}
 	}

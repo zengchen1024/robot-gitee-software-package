@@ -1,4 +1,4 @@
-package main
+package community
 
 import (
 	sdk "github.com/opensourceways/go-gitee/gitee"
@@ -7,8 +7,8 @@ import (
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain/repository"
 )
 
-func (bot *robot) handleCILabel(e *sdk.PullRequestEvent, cfg *botConfig) error {
-	pkg, err := bot.repo.Find(int(e.Number))
+func (impl *eventHandler) handleCILabel(e *sdk.PullRequestEvent) error {
+	pkg, err := impl.repo.Find(int(e.Number))
 	if err != nil {
 		if repository.IsErrorResourceNotFound(err) {
 			err = nil
@@ -22,20 +22,21 @@ func (bot *robot) handleCILabel(e *sdk.PullRequestEvent, cfg *botConfig) error {
 	}
 
 	labels := e.PullRequest.LabelsToSet()
+	cfg := &impl.cfg
 
-	if labels.Has(cfg.CILabel.Success) {
-		return bot.prService.HandleCI(&cmd)
+	if labels.Has(cfg.CISuccessLabel) {
+		return impl.service.HandleCI(&cmd)
 	}
 
-	if labels.Has(cfg.CILabel.Fail) {
+	if labels.Has(cfg.CIFailureLabel) {
 		cmd.FailedReason = "ci check failed"
 
-		if v, err := bot.cli.GetRepo(bot.PkgSrcOrg, pkg.Name); err == nil {
+		if v, err := impl.cli.GetRepo(cfg.PkgOrg, pkg.Name); err == nil {
 			cmd.RepoLink = v.HtmlUrl
 			cmd.FailedReason = "package already exists"
 		}
 
-		return bot.prService.HandleCI(&cmd)
+		return impl.service.HandleCI(&cmd)
 	}
 
 	return nil

@@ -1,16 +1,17 @@
 package config
 
 import (
+	kafka "github.com/opensourceways/kafka-lib/agent"
 	"github.com/opensourceways/server-common-lib/utils"
 
-	"github.com/opensourceways/robot-gitee-software-package/kafka"
+	"github.com/opensourceways/robot-gitee-software-package/community"
 	"github.com/opensourceways/robot-gitee-software-package/message-server"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/codeimpl"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/emailimpl"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/postgresql"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/pullrequestimpl"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/repositoryimpl"
-	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/watchingimpl"
+	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/watch"
 	localutils "github.com/opensourceways/robot-gitee-software-package/utils"
 )
 
@@ -43,27 +44,29 @@ type PostgresqlConfig struct {
 }
 
 type Config struct {
-	MQ            kafka.Config           `json:"mq"`
-	MessageServer messageserver.Config   `json:"message_server"`
-	Email         emailimpl.Config       `json:"email"`
-	Watch         watchingimpl.Config    `json:"watch"`
-	Postgresql    PostgresqlConfig       `json:"postgresql"`
-	PullRequest   pullrequestimpl.Config `json:"pull_request"`
 	Code          codeimpl.Config        `json:"code"`
+	Kafka         kafka.Config           `json:"kafka"`
+	Email         emailimpl.Config       `json:"email"`
+	Watch         watch.Config           `json:"watch"`
+	Community     community.Config       `json:"community"`
+	Postgresql    PostgresqlConfig       `json:"postgresql"`
 	Encryption    localutils.Config      `json:"encryption"`
+	PullRequest   pullrequestimpl.Config `json:"pull_request"`
+	MessageServer messageserver.Config   `json:"message_server"`
 }
 
 func (cfg *Config) configItems() []interface{} {
 	return []interface{}{
-		&cfg.MQ,
-		&cfg.MessageServer,
+		&cfg.Code,
+		&cfg.Kafka,
 		&cfg.Email,
 		&cfg.Watch,
+		&cfg.Community,
 		&cfg.Postgresql.DB,
 		&cfg.Postgresql.Config,
-		&cfg.PullRequest,
-		&cfg.Code,
 		&cfg.Encryption,
+		&cfg.PullRequest,
+		&cfg.MessageServer,
 	}
 }
 

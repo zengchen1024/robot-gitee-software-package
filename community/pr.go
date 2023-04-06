@@ -1,4 +1,4 @@
-package main
+package community
 
 import (
 	sdk "github.com/opensourceways/go-gitee/gitee"
@@ -7,8 +7,8 @@ import (
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain/repository"
 )
 
-func (bot *robot) handlePRState(e *sdk.PullRequestEvent) error {
-	_, err := bot.repo.Find(int(e.Number))
+func (impl *eventHandler) handlePRState(e *sdk.PullRequestEvent) error {
+	_, err := impl.repo.Find(int(e.Number))
 	if err != nil {
 		if repository.IsErrorResourceNotFound(err) {
 			err = nil
@@ -23,9 +23,10 @@ func (bot *robot) handlePRState(e *sdk.PullRequestEvent) error {
 			PRNum: int(e.Number),
 		}
 
-		return bot.prService.HandlePRMerged(&cmd)
+		return impl.service.HandlePRMerged(&cmd)
+
 	case sdk.StatusClosed:
-		r, err := bot.cli.GetBot()
+		r, err := impl.cli.GetBot()
 		if err != nil {
 			return err
 		}
@@ -35,14 +36,16 @@ func (bot *robot) handlePRState(e *sdk.PullRequestEvent) error {
 			return nil
 		}
 
-		cmd := bot.closedPrCmd(e.Number, updateBy)
-		return bot.prService.HandlePRClosed(&cmd)
+		cmd := impl.closedPrCmd(e.Number, updateBy)
+
+		return impl.service.HandlePRClosed(&cmd)
+
 	default:
 		return nil
 	}
 }
 
-func (bot *robot) closedPrCmd(num int64, rejectedBy string) app.CmdToHandlePRClosed {
+func (impl *eventHandler) closedPrCmd(num int64, rejectedBy string) app.CmdToHandlePRClosed {
 	return app.CmdToHandlePRClosed{
 		PRNum:      int(num),
 		RejectedBy: rejectedBy,
