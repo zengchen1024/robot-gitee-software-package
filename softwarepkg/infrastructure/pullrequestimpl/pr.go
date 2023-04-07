@@ -2,38 +2,42 @@ package pullrequestimpl
 
 import (
 	sdk "github.com/opensourceways/go-gitee/gitee"
+	"github.com/opensourceways/robot-gitee-lib/client"
 
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain"
 )
 
-func NewPullRequestImpl(cli iClient, cfg Config) (impl *pullRequestImpl, err error) {
-	v, err := cli.GetBot()
-	if err != nil {
-		return
+func NewPullRequestImpl(cfg *Config) *pullRequestImpl {
+	cli := client.NewClient(func() []byte {
+		return []byte(cfg.Robot.Token)
+	})
+
+	robot := client.NewClient(func() []byte {
+		return []byte(cfg.RobotToMergePR.Token)
+	})
+
+	return &pullRequestImpl{
+		cli:          cli,
+		cfg:          *cfg,
+		cliToMergePR: robot,
 	}
-
-	impl = &pullRequestImpl{
-		cli:        cli,
-		cfg:        cfg,
-		robotLogin: v.Login,
-	}
-
-	return
-}
-
-type pullRequestImpl struct {
-	cli        iClient
-	cfg        Config
-	robotLogin string
 }
 
 type iClient interface {
-	GetBot() (sdk.User, error)
 	CreatePullRequest(org, repo, title, body, head, base string, canModify bool) (sdk.PullRequest, error)
 	GetGiteePullRequest(org, repo string, number int32) (sdk.PullRequest, error)
-	MergePR(owner, repo string, number int32, opt sdk.PullRequestMergePutParam) error
 	ClosePR(org, repo string, number int32) error
 	CreatePRComment(org, repo string, number int32, comment string) error
+}
+
+type clientToMergePR interface {
+	MergePR(owner, repo string, number int32, opt sdk.PullRequestMergePutParam) error
+}
+
+type pullRequestImpl struct {
+	cli          iClient
+	cfg          Config
+	cliToMergePR clientToMergePR
 }
 
 func (impl *pullRequestImpl) Create(pkg *domain.SoftwarePkg) (pr domain.PullRequest, err error) {
@@ -63,7 +67,9 @@ func (impl *pullRequestImpl) Merge(prNum int) error {
 		return nil
 	}
 
-	return impl.cli.MergePR(org, repo, int32(prNum), sdk.PullRequestMergePutParam{})
+	return impl.cliToMergePR.MergePR(
+		org, repo, int32(prNum), sdk.PullRequestMergePutParam{},
+	)
 }
 
 func (impl *pullRequestImpl) Close(prNum int) error {

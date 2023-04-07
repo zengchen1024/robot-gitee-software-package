@@ -2,6 +2,7 @@ package community
 
 import (
 	sdk "github.com/opensourceways/go-gitee/gitee"
+	"github.com/opensourceways/robot-gitee-lib/client"
 
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/app"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain/repository"
@@ -12,26 +13,41 @@ type EventHandler interface {
 }
 
 type iClient interface {
-	GetBot() (sdk.User, error)
 	GetRepo(org, repo string) (sdk.Project, error)
 }
 
 func NewEventHandler(
-	cli iClient,
 	cfg *Config,
 	repo repository.SoftwarePkg,
 	service app.PackageService,
-) *eventHandler {
+) (*eventHandler, error) {
+	cli := client.NewClient(func() []byte {
+		return []byte(cfg.RobotToken)
+	})
+
+	u, err := cli.GetBot()
+	if err != nil {
+		return nil, err
+	}
+
 	return &eventHandler{
-		cli:     cli,
+		cli: robotImpl{
+			iClient:   cli,
+			robotName: u.Login,
+		},
 		cfg:     *cfg,
 		repo:    repo,
 		service: service,
-	}
+	}, nil
+}
+
+type robotImpl struct {
+	iClient
+	robotName string
 }
 
 type eventHandler struct {
-	cli     iClient
+	cli     robotImpl
 	cfg     Config
 	repo    repository.SoftwarePkg
 	service app.PackageService

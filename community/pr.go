@@ -26,13 +26,8 @@ func (impl *eventHandler) handlePRState(e *sdk.PullRequestEvent) error {
 		return impl.service.HandlePRMerged(&cmd)
 
 	case sdk.StatusClosed:
-		r, err := impl.cli.GetBot()
-		if err != nil {
-			return err
-		}
-
 		updateBy := e.GetUpdatedBy().GetLogin()
-		if r.Login == updateBy {
+		if impl.cli.robotName == updateBy {
 			return nil
 		}
 

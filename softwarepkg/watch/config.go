@@ -3,14 +3,15 @@ package watch
 import "time"
 
 type Config struct {
-	Org string `json:"org"`
+	RobotToken string `json:"robot_token" required:"true"`
+	PkgOrg     string `json:"pkg_org"`
 	// unit second
 	Interval int `json:"interval"`
 }
 
 func (cfg *Config) SetDefault() {
-	if cfg.Org == "" {
-		cfg.Org = "src-openeuler"
+	if cfg.PkgOrg == "" {
+		cfg.PkgOrg = "src-openeuler"
 	}
 
 	if cfg.Interval <= 0 {

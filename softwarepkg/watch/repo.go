@@ -4,6 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/opensourceways/go-gitee/gitee"
+	"github.com/opensourceways/robot-gitee-lib/client"
 	"github.com/sirupsen/logrus"
 
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/app"
@@ -13,10 +14,13 @@ import (
 
 func NewWatchingImpl(
 	cfg Config,
-	cli iClient,
 	repo repository.SoftwarePkg,
 	service app.PackageService,
 ) *WatchingImpl {
+	cli := client.NewClient(func() []byte {
+		return []byte(cfg.RobotToken)
+	})
+
 	return &WatchingImpl{
 		cfg:     cfg,
 		cli:     cli,
@@ -85,7 +89,7 @@ func (impl *WatchingImpl) watch() {
 func (impl *WatchingImpl) handle(pkg domain.SoftwarePkg) {
 	switch pkg.Status {
 	case domain.PkgStatusPRMerged:
-		v, err := impl.cli.GetRepo(impl.cfg.Org, pkg.Name)
+		v, err := impl.cli.GetRepo(impl.cfg.PkgOrg, pkg.Name)
 		if err != nil {
 			return
 		}
