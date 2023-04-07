@@ -7,7 +7,7 @@ import (
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain"
 )
 
-func NewPullRequestImpl(cfg *Config) *pullRequestImpl {
+func NewPullRequestImpl(cfg *Config) (*pullRequestImpl, error) {
 	cli := client.NewClient(func() []byte {
 		return []byte(cfg.Robot.Token)
 	})
@@ -16,11 +16,17 @@ func NewPullRequestImpl(cfg *Config) *pullRequestImpl {
 		return []byte(cfg.RobotToMergePR.Token)
 	})
 
+	tmpl, err := newtemplateImpl(&cfg.Template)
+	if err != nil {
+		return nil, err
+	}
+
 	return &pullRequestImpl{
 		cli:          cli,
 		cfg:          *cfg,
+		template:     tmpl,
 		cliToMergePR: robot,
-	}
+	}, nil
 }
 
 type iClient interface {
@@ -37,21 +43,16 @@ type clientToMergePR interface {
 type pullRequestImpl struct {
 	cli          iClient
 	cfg          Config
+	template     templateImpl
 	cliToMergePR clientToMergePR
 }
 
-func (impl *pullRequestImpl) Create(pkg *domain.SoftwarePkg) (pr domain.PullRequest, err error) {
-	if err = impl.createBranch(pkg); err != nil {
-		return
+func (impl *pullRequestImpl) Create(pkg *domain.SoftwarePkg) (domain.PullRequest, error) {
+	if err := impl.createBranch(pkg); err != nil {
+		return domain.PullRequest{}, err
 	}
 
-	v, err := impl.createPR(pkg)
-	if err == nil {
-		pr.Num = int(v.Number)
-		pr.Link = v.HtmlUrl
-	}
-
-	return
+	return impl.createPR(pkg)
 }
 
 func (impl *pullRequestImpl) Merge(prNum int) error {

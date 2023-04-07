@@ -92,7 +92,12 @@ func main() {
 }
 
 func run(cfg *config.Config) {
-	pullRequest := pullrequestimpl.NewPullRequestImpl(&cfg.PullRequest)
+	pullRequest, err := pullrequestimpl.NewPullRequestImpl(&cfg.PullRequest)
+	if err != nil {
+		logrus.Errorf("init pull request failed, err:%s", err.Error())
+
+		return
+	}
 
 	repo := repositoryimpl.NewSoftwarePkgPR(&cfg.Postgresql.Config)
 

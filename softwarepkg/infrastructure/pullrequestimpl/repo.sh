@@ -34,11 +34,12 @@ new_branch() {
 }
 
 modify() {
-  echo "$sig_info_content" >> $sig_info_file
+  # ignore the sig_info.yaml
+  # echo "$sig_info_content" >> $sig_info_file
 
   dn=$(dirname $new_repo_file)
   if [ ! -d $dn ]; then
-     mkdir $dn
+     mkdir -p $dn
   fi
 
   echo "$new_repo_content" > $new_repo_file

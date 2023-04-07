@@ -5,6 +5,7 @@ type Config struct {
 	Robot          RobotConfig    `json:"robot"`
 	Template       Template       `json:"template"`
 	ShellScript    string         `json:"shell_script"`
+	SoftwarePkg    SoftwarePkg    `json:"software_pkg"`
 	RobotToMergePR RobotToMergePR `json:"robot_to_merge_pr"`
 }
 
@@ -31,7 +32,6 @@ type PRConfig struct {
 	NewRepoBranch NewRepoBranch `json:"new_repo_branch"`
 	Org           string        `json:"org"`
 	Repo          string        `json:"repo"`
-	PRName        string        `json:"pr_name"`
 }
 
 func (cfg *PRConfig) setDefault() {
@@ -41,10 +41,6 @@ func (cfg *PRConfig) setDefault() {
 
 	if cfg.Repo == "" {
 		cfg.Repo = "community"
-	}
-
-	if cfg.PRName == "" {
-		cfg.PRName = ",新增软件包申请"
 	}
 
 	cfg.NewRepoBranch.setDefault()
@@ -71,16 +67,25 @@ func (cfg *NewRepoBranch) setDefault() {
 }
 
 type Template struct {
-	AppendSigInfo string `json:"append_sig_info"`
-	NewRepoFile   string `json:"new_repo_file"`
+	PRBodyTpl   string `json:"pr_body_tpl"`
+	SigInfoTpl  string `json:"sig_info_tpl"`
+	RepoYamlTpl string `json:"repo_yaml_tpl"`
 }
 
 func (t *Template) setDefault() {
-	if t.AppendSigInfo == "" {
-		t.AppendSigInfo = "/opt/app/template/append_sig_info.tpl"
+	if t.PRBodyTpl == "" {
+		t.PRBodyTpl = "/opt/app/template/pr_body.tpl"
 	}
 
-	if t.NewRepoFile == "" {
-		t.NewRepoFile = "/opt/app/template/new_repo_file.tpl"
+	if t.SigInfoTpl == "" {
+		t.SigInfoTpl = "/opt/app/template/sig_info.tpl"
 	}
+
+	if t.RepoYamlTpl == "" {
+		t.RepoYamlTpl = "/opt/app/template/repo_yaml.tpl"
+	}
+}
+
+type SoftwarePkg struct {
+	Endpoint string `json:"endpoint" required:"true"`
 }
