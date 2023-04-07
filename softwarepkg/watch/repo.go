@@ -89,7 +89,7 @@ func (impl *WatchingImpl) watch() {
 func (impl *WatchingImpl) handle(pkg domain.SoftwarePkg) {
 	switch pkg.Status {
 	case domain.PkgStatusPRMerged:
-		v, err := impl.cli.GetRepo(impl.cfg.Org, pkg.Name)
+		v, err := impl.cli.GetRepo(impl.cfg.PkgOrg, pkg.Name)
 		if err != nil {
 			return
 		}

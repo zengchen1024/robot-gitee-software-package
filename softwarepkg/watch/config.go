@@ -4,14 +4,14 @@ import "time"
 
 type Config struct {
 	RobotToken string `json:"robot_token" required:"true"`
-	Org        string `json:"org"`
+	PkgOrg     string `json:"pkg_org"`
 	// unit second
 	Interval int `json:"interval"`
 }
 
 func (cfg *Config) SetDefault() {
-	if cfg.Org == "" {
-		cfg.Org = "src-openeuler"
+	if cfg.PkgOrg == "" {
+		cfg.PkgOrg = "src-openeuler"
 	}
 
 	if cfg.Interval <= 0 {
