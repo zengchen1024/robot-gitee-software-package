@@ -9,10 +9,8 @@ import (
 	"syscall"
 
 	kafka "github.com/opensourceways/kafka-lib/agent"
-	"github.com/opensourceways/robot-gitee-lib/client"
 	"github.com/opensourceways/server-common-lib/logrusutil"
 	liboptions "github.com/opensourceways/server-common-lib/options"
-	"github.com/opensourceways/server-common-lib/secret"
 	"github.com/sirupsen/logrus"
 
 	"github.com/opensourceways/robot-gitee-software-package/community"
@@ -31,21 +29,15 @@ import (
 
 type options struct {
 	service liboptions.ServiceOptions
-	gitee   liboptions.GiteeOptions
 }
 
 func (o *options) Validate() error {
-	if err := o.service.Validate(); err != nil {
-		return err
-	}
-
-	return o.gitee.Validate()
+	return o.service.Validate()
 }
 
 func gatherOptions(fs *flag.FlagSet, args ...string) options {
 	var o options
 
-	o.gitee.AddFlags(fs)
 	o.service.AddFlags(fs)
 
 	fs.Parse(args)
@@ -63,17 +55,6 @@ func main() {
 
 		return
 	}
-
-	secretAgent := new(secret.Agent)
-	if err := secretAgent.Start([]string{o.gitee.TokenPath}); err != nil {
-		logrus.Errorf("Error starting secret agenti, err:%s.", err.Error())
-
-		return
-	}
-
-	defer secretAgent.Stop()
-
-	cli := client.NewClient(secretAgent.GetTokenGenerator(o.gitee.TokenPath))
 
 	// cfg
 	cfg, err := config.LoadConfig(o.service.ConfigFile)
@@ -107,16 +88,11 @@ func main() {
 	defer kafka.Exit()
 
 	// run
-	run(cfg, cli)
+	run(cfg)
 }
 
-func run(cfg *config.Config, cli client.Client) {
-	pullRequest, err := pullrequestimpl.NewPullRequestImpl(cli, cfg.PullRequest)
-	if err != nil {
-		logrus.Errorf("init pullRequest failed, err:%s", err.Error())
-
-		return
-	}
+func run(cfg *config.Config) {
+	pullRequest := pullrequestimpl.NewPullRequestImpl(&cfg.PullRequest)
 
 	repo := repositoryimpl.NewSoftwarePkgPR(&cfg.Postgresql.Config)
 
@@ -128,11 +104,18 @@ func run(cfg *config.Config, cli client.Client) {
 		codeimpl.NewCodeImpl(cfg.Code),
 	)
 
+	eventHandler, err := community.NewEventHandler(&cfg.Community, repo, packageService)
+	if err != nil {
+		logrus.Errorf("init community event handler failed, err:%s", err.Error())
+
+		return
+	}
+
 	// message server
 	err = messageserver.Init(
 		&cfg.MessageServer,
 		app.NewMessageService(repo, pullRequest),
-		community.NewEventHandler(cli, &cfg.Community, repo, packageService),
+		eventHandler,
 	)
 	if err != nil {
 		logrus.Errorf("init message server failed, err:%s", err.Error())
@@ -141,7 +124,7 @@ func run(cfg *config.Config, cli client.Client) {
 	}
 
 	// watch
-	w := watch.NewWatchingImpl(cfg.Watch, cli, repo, packageService)
+	w := watch.NewWatchingImpl(cfg.Watch, repo, packageService)
 	w.Start()
 	defer w.Stop()
 

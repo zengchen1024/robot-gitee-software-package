@@ -2,6 +2,7 @@ package community
 
 type Config struct {
 	PkgOrg         string `json:"pkg_org"          required:"true"`
+	RobotToken     string `json:"robot_token"      required:"true"`
 	CommunityOrg   string `json:"community_org"    required:"true"`
 	CommunityRepo  string `json:"community_repo"   required:"true"`
 	CISuccessLabel string `json:"ci_success_label" required:"true"`

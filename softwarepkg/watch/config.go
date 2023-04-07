@@ -3,7 +3,8 @@ package watch
 import "time"
 
 type Config struct {
-	Org string `json:"org"`
+	RobotToken string `json:"robot_token" required:"true"`
+	Org        string `json:"org"`
 	// unit second
 	Interval int `json:"interval"`
 }

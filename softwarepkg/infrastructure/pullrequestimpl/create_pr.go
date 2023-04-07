@@ -113,7 +113,8 @@ func (impl *pullRequestImpl) genTemplate(fileName string, data interface{}) (str
 
 func (impl *pullRequestImpl) createPR(pkg *domain.SoftwarePkg) (pr sdk.PullRequest, err error) {
 	prName := pkg.Name + impl.cfg.PR.PRName
-	head := fmt.Sprintf("%s:%s", impl.robotLogin, impl.branchName(pkg.Name))
+	head := fmt.Sprintf("%s:%s", impl.cfg.Robot.Username, impl.branchName(pkg.Name))
+
 	return impl.cli.CreatePullRequest(
 		impl.cfg.PR.Org, impl.cfg.PR.Repo, prName,
 		pkg.Application.ReasonToImportPkg, head, "master", true,

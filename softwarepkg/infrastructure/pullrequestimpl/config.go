@@ -1,10 +1,11 @@
 package pullrequestimpl
 
 type Config struct {
-	Robot       RobotConfig `json:"robot"`
-	PR          PRConfig    `json:"pr"`
-	Template    Template    `json:"template"`
-	ShellScript string      `json:"shell_script"`
+	PR             PRConfig       `json:"pr"`
+	Robot          RobotConfig    `json:"robot"`
+	Template       Template       `json:"template"`
+	ShellScript    string         `json:"shell_script"`
+	RobotToMergePR RobotToMergePR `json:"robot_to_merge_pr"`
 }
 
 func (cfg *Config) SetDefault() {
@@ -20,6 +21,10 @@ type RobotConfig struct {
 	Username string `json:"username" required:"true"`
 	Token    string `json:"token"    required:"true"`
 	Email    string `json:"email"    required:"true"`
+}
+
+type RobotToMergePR struct {
+	Token string `json:"token"    required:"true"`
 }
 
 type PRConfig struct {
