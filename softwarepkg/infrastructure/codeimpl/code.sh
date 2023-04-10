@@ -20,9 +20,9 @@ cd $repo
 git config user.username $user
 git config user.email $email
 
-wget $spec_url
+curl -LO $spec_url
 
-wget $src_rpm_url
+curl -LO $src_rpm_url
 rpm2cpio *.rpm | cpio -div
 rm -rf *.rpm
 

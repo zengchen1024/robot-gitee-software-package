@@ -13,6 +13,6 @@ COPY --from=BUILDER /go/src/github.com/opensourceways/robot-gitee-software-packa
 COPY softwarepkg/infrastructure/pullrequestimpl/repo.sh /opt/app/repo.sh
 COPY softwarepkg/infrastructure/codeimpl/code.sh /opt/app/code.sh
 COPY softwarepkg/infrastructure/template /opt/app/template
-RUN chmod +x /opt/app/repo.sh /opt/app/code.sh && apk update && apk add --no-cache git libc6-compat rpm
+RUN chmod +x /opt/app/repo.sh /opt/app/code.sh && apk update && apk add --no-cache git libc6-compat rpm curl
 
 ENTRYPOINT ["/opt/app/robot-gitee-software-package"]
