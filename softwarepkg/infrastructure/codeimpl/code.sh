@@ -22,7 +22,13 @@ git config user.email $email
 
 curl -LO $spec_url
 
-curl -LO $src_rpm_url
+if [[ $src_rpm_url == *"gitee.com"* ]]
+then
+  /opt/app/download $src_rpm_url ${ROBOT_TOKEN}
+else
+  curl -LO $src_rpm_url
+fi
+
 rpm2cpio *.rpm | cpio -div
 rm -rf *.rpm
 
