@@ -26,7 +26,6 @@ new_branch() {
     git clean -fd
 
     git checkout master
-    git branch -D $branch_name
 
     git fetch upstream master
     git rebase upstream/master
