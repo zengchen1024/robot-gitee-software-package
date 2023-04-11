@@ -26,6 +26,7 @@ new_branch() {
     git clean -fd
 
     git checkout master
+    git branch -D $branch_name
 
     git fetch upstream master
     git rebase upstream/master
@@ -50,9 +51,11 @@ commit() {
 
     git commit -m 'apply new package'
 
-    git push origin $branch_name
+    git push origin $branch_name -f
 
     git checkout master
+
+    git branch -D $branch_name
 }
 
 git_user=$1
