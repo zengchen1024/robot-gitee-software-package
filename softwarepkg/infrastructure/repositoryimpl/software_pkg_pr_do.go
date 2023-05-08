@@ -11,17 +11,19 @@ import (
 
 type SoftwarePkgPRDO struct {
 	// must set "uuid" as the name of column
-	PkgId         uuid.UUID `gorm:"column:uuid;type:uuid"`
-	Link          string    `gorm:"column:link"`
-	PkgName       string    `gorm:"column:pkg_name"`
-	Num           int       `gorm:"column:num"`
-	Status        string    `gorm:"column:status"`
-	ImporterName  string    `gorm:"column:importer_name"`
-	ImporterEmail string    `gorm:"column:importer_email"`
-	SpecURL       string    `gorm:"column:spec_url"`
-	SrcRPMURL     string    `gorm:"column:src_rpm_url"`
-	CreatedAt     int64     `gorm:"column:created_at"`
-	UpdatedAt     int64     `gorm:"column:updated_at"`
+	PkgId   uuid.UUID `gorm:"column:uuid;type:uuid"`
+	Link    string    `gorm:"column:link"`
+	PkgName string    `gorm:"column:pkg_name"`
+	//Num is the pr num of community repo
+	Num           int    `gorm:"column:num"`
+	CIPRNum       int    `gorm:"column:ci_pr_num"`
+	Status        string `gorm:"column:status"`
+	ImporterName  string `gorm:"column:importer_name"`
+	ImporterEmail string `gorm:"column:importer_email"`
+	SpecURL       string `gorm:"column:spec_url"`
+	SrcRPMURL     string `gorm:"column:src_rpm_url"`
+	CreatedAt     int64  `gorm:"column:created_at"`
+	UpdatedAt     int64  `gorm:"column:updated_at"`
 }
 
 func (s softwarePkgPR) toSoftwarePkgPRDO(p *domain.SoftwarePkg, id uuid.UUID, do *SoftwarePkgPRDO) error {
@@ -33,6 +35,7 @@ func (s softwarePkgPR) toSoftwarePkgPRDO(p *domain.SoftwarePkg, id uuid.UUID, do
 	*do = SoftwarePkgPRDO{
 		PkgId:         id,
 		Num:           p.PullRequest.Num,
+		CIPRNum:       p.CIPRNum,
 		Status:        p.Status,
 		Link:          p.PullRequest.Link,
 		PkgName:       p.Name,
@@ -54,6 +57,7 @@ func (do *SoftwarePkgPRDO) toDomainPullRequest() (pkg domain.SoftwarePkg, err er
 
 	pkg.PullRequest.Link = do.Link
 	pkg.PullRequest.Num = do.Num
+	pkg.CIPRNum = do.CIPRNum
 	pkg.Status = do.Status
 	pkg.Name = do.PkgName
 	pkg.Id = do.PkgId.String()

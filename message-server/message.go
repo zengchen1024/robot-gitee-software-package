@@ -15,6 +15,7 @@ type msgToHandleNewPkg struct {
 	SrcRPMURL         string `json:"src_rpm_url"`
 	ImportingPkgSig   string `json:"sig"`
 	ReasonToImportPkg string `json:"reason_to_import"`
+	CIPRNum           int    `json:"ci_pr_num"`
 }
 
 func (msg *msgToHandleNewPkg) toCmd() app.CmdToHandleNewPkg {
@@ -36,5 +37,6 @@ func (msg *msgToHandleNewPkg) toCmd() app.CmdToHandleNewPkg {
 			ImportingPkgSig:   msg.ImportingPkgSig,
 			ReasonToImportPkg: msg.ReasonToImportPkg,
 		},
+		CIPRNum: msg.CIPRNum,
 	}
 }

@@ -41,6 +41,7 @@ type SoftwarePkg struct {
 	PullRequest PullRequest
 	Importer    Importer
 	Application SoftwarePkgApplication
+	CIPRNum     int
 }
 
 func (r *SoftwarePkg) SetPkgStatusInitialized() {
