@@ -24,7 +24,7 @@ type prBodyTplData struct {
 	PkgLink string
 }
 
-func newtemplateImpl(cfg *Template) (templateImpl, error) {
+func newtemplateImpl(cfg *templateConfig) (templateImpl, error) {
 	r := templateImpl{}
 
 	// pr body

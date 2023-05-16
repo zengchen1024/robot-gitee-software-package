@@ -23,14 +23,11 @@ func (impl *pullRequestImpl) createBranch(pkg *domain.SoftwarePkg) error {
 		return err
 	}
 
+	cfg := &impl.cfg
 	params := []string{
-		impl.cfg.ShellScript,
-		impl.cfg.Robot.Username,
-		impl.cfg.Robot.Token,
-		impl.cfg.Robot.Email,
+		cfg.ShellScript.BranchScript,
+		impl.localRepoDir,
 		impl.branchName(pkg.Name),
-		impl.cfg.CommunityRobot.Org,
-		impl.cfg.CommunityRobot.Repo,
 		fmt.Sprintf("sig/%s/sig-info.yaml", pkg.Application.ImportingPkgSig),
 		sigInfoData,
 		fmt.Sprintf(
@@ -40,7 +37,6 @@ func (impl *pullRequestImpl) createBranch(pkg *domain.SoftwarePkg) error {
 			pkg.Name,
 		),
 		newRepoData,
-		impl.cfg.Robot.Repo,
 	}
 
 	out, err, _ := utils.RunCmd(params...)
