@@ -1,42 +1,70 @@
 package pullrequestimpl
 
+import (
+	"fmt"
+	"strings"
+)
+
 type Config struct {
-	CommunityRobot CommunityRobotConfig `json:"community_robot"`
-	Robot          RobotConfig          `json:"robot"`
-	Template       Template             `json:"template"`
-	ShellScript    string               `json:"shell_script"`
-	SoftwarePkg    SoftwarePkg          `json:"software_pkg"`
+	Robot          robotConfig          `json:"robot"`
+	Template       templateConfig       `json:"template"`
+	SoftwarePkg    softwarePkg          `json:"software_pkg"`
+	ShellScript    shellConfig          `json:"shell_script"`
+	CommunityRobot communityRobotConfig `json:"community_robot"`
 }
 
 func (cfg *Config) SetDefault() {
 	cfg.Robot.setDefault()
 	cfg.CommunityRobot.setDefault()
 	cfg.Template.setDefault()
+	cfg.ShellScript.setdefault()
+}
 
-	if cfg.ShellScript == "" {
-		cfg.ShellScript = "/opt/app/repo.sh"
+type shellConfig struct {
+	WorkDir      string `json:"work_dir"       required:"true"`
+	BranchScript string `json:"branch_script"`
+	CloneScript  string `json:"clone_script"`
+}
+
+func (cfg *shellConfig) setdefault() {
+	if cfg.BranchScript == "" {
+		cfg.BranchScript = "/opt/app/create_branch.sh"
+	}
+
+	if cfg.CloneScript == "" {
+		cfg.CloneScript = "/opt/app/clone_repo.sh"
 	}
 }
 
-type RobotConfig struct {
-	Username      string        `json:"username" required:"true"`
-	Token         string        `json:"token"    required:"true"`
-	Email         string        `json:"email"    required:"true"`
-	Repo          string        `json:"repo"     required:"true"`
+type robotConfig struct {
+	Username      string        `json:"username"           required:"true"`
+	Token         string        `json:"token"              required:"true"`
+	Email         string        `json:"email"              required:"true"`
+	Repo          string        `json:"repo"               required:"true"`
+	RepoLink      string        `json:"link"               required:"true"`
 	NewRepoBranch NewRepoBranch `json:"new_repo_branch"`
 }
 
-func (cfg *RobotConfig) setDefault() {
+func (cfg *robotConfig) setDefault() {
 	cfg.NewRepoBranch.setDefault()
 }
 
-type CommunityRobotConfig struct {
-	Token string `json:"token" required:"true"`
-	Org   string `json:"org"`
-	Repo  string `json:"repo"`
+func (cfg *robotConfig) cloneURL() string {
+	return fmt.Sprintf(
+		"https://%s:%s@%s",
+		cfg.Username, cfg.Token,
+		strings.TrimPrefix(cfg.RepoLink, "https://"),
+	)
 }
 
-func (cfg *CommunityRobotConfig) setDefault() {
+type communityRobotConfig struct {
+	Token    string `json:"token" required:"true"`
+	Org      string `json:"org"`
+	Repo     string `json:"repo"`
+	RepoLink string `json:"link"  required:"true"`
+}
+
+func (cfg *communityRobotConfig) setDefault() {
 	if cfg.Org == "" {
 		cfg.Org = "openeuler"
 	}
@@ -66,13 +94,13 @@ func (cfg *NewRepoBranch) setDefault() {
 	}
 }
 
-type Template struct {
+type templateConfig struct {
 	PRBodyTpl   string `json:"pr_body_tpl"`
 	SigInfoTpl  string `json:"sig_info_tpl"`
 	RepoYamlTpl string `json:"repo_yaml_tpl"`
 }
 
-func (t *Template) setDefault() {
+func (t *templateConfig) setDefault() {
 	if t.PRBodyTpl == "" {
 		t.PRBodyTpl = "/opt/app/template/pr_body.tpl"
 	}
@@ -86,6 +114,6 @@ func (t *Template) setDefault() {
 	}
 }
 
-type SoftwarePkg struct {
+type softwarePkg struct {
 	Endpoint string `json:"endpoint" required:"true"`
 }

@@ -1,13 +1,21 @@
 package pullrequestimpl
 
 import (
+	"path/filepath"
+
 	sdk "github.com/opensourceways/go-gitee/gitee"
 	"github.com/opensourceways/robot-gitee-lib/client"
+	"github.com/opensourceways/server-common-lib/utils"
 
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/domain"
 )
 
 func NewPullRequestImpl(cfg *Config) (*pullRequestImpl, error) {
+	localRepoDir, err := cloneRepo(cfg)
+	if err != nil {
+		return nil, err
+	}
+
 	cli := client.NewClient(func() []byte {
 		return []byte(cfg.Robot.Token)
 	})
@@ -26,7 +34,28 @@ func NewPullRequestImpl(cfg *Config) (*pullRequestImpl, error) {
 		cfg:          *cfg,
 		template:     tmpl,
 		cliToMergePR: robot,
+		localRepoDir: localRepoDir,
 	}, nil
+}
+
+func cloneRepo(cfg *Config) (string, error) {
+	user := &cfg.Robot
+
+	params := []string{
+		cfg.ShellScript.CloneScript,
+		cfg.ShellScript.WorkDir,
+		user.Username,
+		user.Email,
+		user.Repo,
+		user.cloneURL(),
+		cfg.CommunityRobot.RepoLink,
+	}
+
+	if _, err, _ := utils.RunCmd(params...); err != nil {
+		return "", err
+	}
+
+	return filepath.Join(cfg.ShellScript.WorkDir, user.Repo), nil
 }
 
 type iClient interface {
@@ -45,6 +74,7 @@ type pullRequestImpl struct {
 	cfg          Config
 	template     templateImpl
 	cliToMergePR clientToMergePR
+	localRepoDir string
 }
 
 func (impl *pullRequestImpl) Create(pkg *domain.SoftwarePkg) (domain.PullRequest, error) {

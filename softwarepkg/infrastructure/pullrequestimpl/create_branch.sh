@@ -2,22 +2,12 @@
 
 set -euo pipefail
 
-init() {
-    if [ -d $repo ]; then
-       return
-    fi
-
-    git clone --depth=1 $repo_url
-    cd $repo
-
-    git config user.name $git_user
-    git config user.email $git_email
-    git config --global pack.threads 1
-
-    git remote add upstream ${upstream}
-
-    cd ..
-}
+repo=$1
+branch_name=$2
+sig_info_file=$3
+sig_info_content=$4
+new_repo_file=$5
+new_repo_content=$6
 
 new_branch() {
     cd $repo
@@ -56,23 +46,6 @@ commit() {
 
     git branch -D $branch_name
 }
-
-git_user=$1
-git_token=$2
-git_email=$3
-branch_name=$4
-org=$5
-repo=$6
-sig_info_file=$7
-sig_info_content=$8
-new_repo_file=$9
-new_repo_content=${10}
-fork_repo=${11}
-
-upstream=https://gitee.com/${org}/${repo}.git
-repo_url=https://${git_user}:${git_token}@gitee.com/${git_user}/${fork_repo}.git
-
-init
 
 new_branch
 
