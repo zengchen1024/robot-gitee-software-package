@@ -29,8 +29,8 @@ func (impl *pullRequestImpl) createBranch(pkg *domain.SoftwarePkg) error {
 		impl.cfg.Robot.Token,
 		impl.cfg.Robot.Email,
 		impl.branchName(pkg.Name),
-		impl.cfg.PR.Org,
-		impl.cfg.PR.Repo,
+		impl.cfg.CommunityRobot.Org,
+		impl.cfg.CommunityRobot.Repo,
 		fmt.Sprintf("sig/%s/sig-info.yaml", pkg.Application.ImportingPkgSig),
 		sigInfoData,
 		fmt.Sprintf(
@@ -40,6 +40,7 @@ func (impl *pullRequestImpl) createBranch(pkg *domain.SoftwarePkg) error {
 			pkg.Name,
 		),
 		newRepoData,
+		impl.cfg.Robot.Repo,
 	}
 
 	out, err, _ := utils.RunCmd(params...)
@@ -70,9 +71,9 @@ func (impl *pullRequestImpl) genNewRepoData(pkg *domain.SoftwarePkg) (string, er
 	return impl.template.genRepoYaml(&repoYamlTplData{
 		PkgName:     pkg.Name,
 		PkgDesc:     pkg.Application.PackageDesc,
-		BranchName:  impl.cfg.PR.NewRepoBranch.Name,
-		ProtectType: impl.cfg.PR.NewRepoBranch.ProtectType,
-		PublicType:  impl.cfg.PR.NewRepoBranch.PublicType,
+		BranchName:  impl.cfg.Robot.NewRepoBranch.Name,
+		ProtectType: impl.cfg.Robot.NewRepoBranch.ProtectType,
+		PublicType:  impl.cfg.Robot.NewRepoBranch.PublicType,
 	})
 }
 
@@ -100,7 +101,7 @@ func (impl *pullRequestImpl) createPR(pkg *domain.SoftwarePkg) (pr domain.PullRe
 	}
 
 	v, err := impl.cli.CreatePullRequest(
-		impl.cfg.PR.Org, impl.cfg.PR.Repo,
+		impl.cfg.CommunityRobot.Org, impl.cfg.CommunityRobot.Repo,
 		fmt.Sprintf("add eco-package: %s", pkg.Name),
 		body,
 		fmt.Sprintf(

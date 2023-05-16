@@ -67,9 +67,10 @@ sig_info_file=$7
 sig_info_content=$8
 new_repo_file=$9
 new_repo_content=${10}
+fork_repo=${11}
 
 upstream=https://gitee.com/${org}/${repo}.git
-repo_url=https://${git_user}:${git_token}@gitee.com/${git_user}/${repo}.git
+repo_url=https://${git_user}:${git_token}@gitee.com/${git_user}/${fork_repo}.git
 
 init
 

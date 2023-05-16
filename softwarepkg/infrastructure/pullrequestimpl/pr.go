@@ -13,7 +13,7 @@ func NewPullRequestImpl(cfg *Config) (*pullRequestImpl, error) {
 	})
 
 	robot := client.NewClient(func() []byte {
-		return []byte(cfg.RobotToMergePR.Token)
+		return []byte(cfg.CommunityRobot.Token)
 	})
 
 	tmpl, err := newtemplateImpl(&cfg.Template)
@@ -56,8 +56,8 @@ func (impl *pullRequestImpl) Create(pkg *domain.SoftwarePkg) (domain.PullRequest
 }
 
 func (impl *pullRequestImpl) Merge(prNum int) error {
-	org := impl.cfg.PR.Org
-	repo := impl.cfg.PR.Repo
+	org := impl.cfg.CommunityRobot.Org
+	repo := impl.cfg.CommunityRobot.Repo
 
 	v, err := impl.cli.GetGiteePullRequest(org, repo, int32(prNum))
 	if err != nil {
@@ -74,8 +74,8 @@ func (impl *pullRequestImpl) Merge(prNum int) error {
 }
 
 func (impl *pullRequestImpl) Close(prNum int) error {
-	org := impl.cfg.PR.Org
-	repo := impl.cfg.PR.Repo
+	org := impl.cfg.CommunityRobot.Org
+	repo := impl.cfg.CommunityRobot.Repo
 
 	prDetail, err := impl.cli.GetGiteePullRequest(org, repo, int32(prNum))
 	if err != nil {
@@ -91,7 +91,7 @@ func (impl *pullRequestImpl) Close(prNum int) error {
 
 func (impl *pullRequestImpl) Comment(prNum int, content string) error {
 	return impl.cli.CreatePRComment(
-		impl.cfg.PR.Org, impl.cfg.PR.Repo,
+		impl.cfg.CommunityRobot.Org, impl.cfg.CommunityRobot.Repo,
 		int32(prNum), content,
 	)
 }

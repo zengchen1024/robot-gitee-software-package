@@ -1,16 +1,16 @@
 package pullrequestimpl
 
 type Config struct {
-	PR             PRConfig       `json:"pr"`
-	Robot          RobotConfig    `json:"robot"`
-	Template       Template       `json:"template"`
-	ShellScript    string         `json:"shell_script"`
-	SoftwarePkg    SoftwarePkg    `json:"software_pkg"`
-	RobotToMergePR RobotToMergePR `json:"robot_to_merge_pr"`
+	CommunityRobot CommunityRobotConfig `json:"community_robot"`
+	Robot          RobotConfig          `json:"robot"`
+	Template       Template             `json:"template"`
+	ShellScript    string               `json:"shell_script"`
+	SoftwarePkg    SoftwarePkg          `json:"software_pkg"`
 }
 
 func (cfg *Config) SetDefault() {
-	cfg.PR.setDefault()
+	cfg.Robot.setDefault()
+	cfg.CommunityRobot.setDefault()
 	cfg.Template.setDefault()
 
 	if cfg.ShellScript == "" {
@@ -19,22 +19,24 @@ func (cfg *Config) SetDefault() {
 }
 
 type RobotConfig struct {
-	Username string `json:"username" required:"true"`
-	Token    string `json:"token"    required:"true"`
-	Email    string `json:"email"    required:"true"`
-}
-
-type RobotToMergePR struct {
-	Token string `json:"token"    required:"true"`
-}
-
-type PRConfig struct {
+	Username      string        `json:"username" required:"true"`
+	Token         string        `json:"token"    required:"true"`
+	Email         string        `json:"email"    required:"true"`
+	Repo          string        `json:"repo"     required:"true"`
 	NewRepoBranch NewRepoBranch `json:"new_repo_branch"`
-	Org           string        `json:"org"`
-	Repo          string        `json:"repo"`
 }
 
-func (cfg *PRConfig) setDefault() {
+func (cfg *RobotConfig) setDefault() {
+	cfg.NewRepoBranch.setDefault()
+}
+
+type CommunityRobotConfig struct {
+	Token string `json:"token" required:"true"`
+	Org   string `json:"org"`
+	Repo  string `json:"repo"`
+}
+
+func (cfg *CommunityRobotConfig) setDefault() {
 	if cfg.Org == "" {
 		cfg.Org = "openeuler"
 	}
@@ -42,8 +44,6 @@ func (cfg *PRConfig) setDefault() {
 	if cfg.Repo == "" {
 		cfg.Repo = "community"
 	}
-
-	cfg.NewRepoBranch.setDefault()
 }
 
 type NewRepoBranch struct {
