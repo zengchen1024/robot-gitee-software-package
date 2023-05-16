@@ -21,12 +21,16 @@ func (cfg *Config) SetDefault() {
 }
 
 type shellConfig struct {
-	WorkDir      string `json:"work_dir"       required:"true"`
+	WorkDir      string `json:"work_dir"`
 	BranchScript string `json:"branch_script"`
 	CloneScript  string `json:"clone_script"`
 }
 
 func (cfg *shellConfig) setdefault() {
+	if cfg.WorkDir == "" {
+		cfg.WorkDir = "/opt/app/work_dir"
+	}
+
 	if cfg.BranchScript == "" {
 		cfg.BranchScript = "/opt/app/create_branch.sh"
 	}
@@ -42,7 +46,7 @@ type robotConfig struct {
 	Email         string        `json:"email"              required:"true"`
 	Repo          string        `json:"repo"               required:"true"`
 	RepoLink      string        `json:"link"               required:"true"`
-	NewRepoBranch NewRepoBranch `json:"new_repo_branch"`
+	NewRepoBranch newRepoBranch `json:"new_repo_branch"`
 }
 
 func (cfg *robotConfig) setDefault() {
@@ -74,13 +78,13 @@ func (cfg *communityRobotConfig) setDefault() {
 	}
 }
 
-type NewRepoBranch struct {
+type newRepoBranch struct {
 	Name        string `json:"name"`
 	ProtectType string `json:"protect_type"`
 	PublicType  string `json:"public_type"`
 }
 
-func (cfg *NewRepoBranch) setDefault() {
+func (cfg *newRepoBranch) setDefault() {
 	if cfg.Name == "" {
 		cfg.Name = "master"
 	}
