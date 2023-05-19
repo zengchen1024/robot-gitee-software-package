@@ -72,7 +72,7 @@ func (impl *pullRequestImpl) genNewRepoFile(pkg *domain.SoftwarePkg) (string, er
 
 	err := impl.template.genRepoYaml(&repoYamlTplData{
 		PkgName:     pkg.Name,
-		PkgDesc:     fmt.Sprintf("\"%s\"", pkg.Application.PackageDesc),
+		PkgDesc:     template.HTML(fmt.Sprintf("'%s'", pkg.Application.PackageDesc)),
 		BranchName:  impl.cfg.Robot.NewRepoBranch.Name,
 		ProtectType: impl.cfg.Robot.NewRepoBranch.ProtectType,
 		PublicType:  impl.cfg.Robot.NewRepoBranch.PublicType,

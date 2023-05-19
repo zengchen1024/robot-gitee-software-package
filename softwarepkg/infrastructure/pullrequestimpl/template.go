@@ -14,7 +14,7 @@ type sigInfoTplData struct {
 
 type repoYamlTplData struct {
 	PkgName     string
-	PkgDesc     string
+	PkgDesc     template.HTML
 	BranchName  string
 	ProtectType string
 	PublicType  string
