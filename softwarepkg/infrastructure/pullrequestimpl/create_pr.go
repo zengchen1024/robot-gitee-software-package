@@ -66,7 +66,7 @@ func (impl *pullRequestImpl) genAppendSigInfoData(pkg *domain.SoftwarePkg) (stri
 func (impl *pullRequestImpl) genNewRepoData(pkg *domain.SoftwarePkg) (string, error) {
 	return impl.template.genRepoYaml(&repoYamlTplData{
 		PkgName:     pkg.Name,
-		PkgDesc:     pkg.Application.PackageDesc,
+		PkgDesc:     fmt.Sprintf("'%s'", pkg.Application.PackageDesc),
 		BranchName:  impl.cfg.Robot.NewRepoBranch.Name,
 		ProtectType: impl.cfg.Robot.NewRepoBranch.ProtectType,
 		PublicType:  impl.cfg.Robot.NewRepoBranch.PublicType,
