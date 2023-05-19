@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"path/filepath"
 	"strings"
 
 	"github.com/opensourceways/server-common-lib/utils"
@@ -18,7 +19,7 @@ func (impl *pullRequestImpl) createBranch(pkg *domain.SoftwarePkg) error {
 		return err
 	}
 
-	newRepoData, err := impl.genNewRepoData(pkg)
+	repoFile, err := impl.genNewRepoFile(pkg)
 	if err != nil {
 		return err
 	}
@@ -36,7 +37,7 @@ func (impl *pullRequestImpl) createBranch(pkg *domain.SoftwarePkg) error {
 			strings.ToLower(pkg.Name[:1]),
 			pkg.Name,
 		),
-		newRepoData,
+		repoFile,
 	}
 
 	out, err, _ := utils.RunCmd(params...)
@@ -63,14 +64,21 @@ func (impl *pullRequestImpl) genAppendSigInfoData(pkg *domain.SoftwarePkg) (stri
 
 }
 
-func (impl *pullRequestImpl) genNewRepoData(pkg *domain.SoftwarePkg) (string, error) {
-	return impl.template.genRepoYaml(&repoYamlTplData{
+func (impl *pullRequestImpl) genNewRepoFile(pkg *domain.SoftwarePkg) (string, error) {
+	f := filepath.Join(
+		impl.cfg.ShellScript.WorkDir,
+		fmt.Sprintf("%s_%s", impl.branchName(pkg.Name), pkg.Name),
+	)
+
+	err := impl.template.genRepoYaml(&repoYamlTplData{
 		PkgName:     pkg.Name,
-		PkgDesc:     fmt.Sprintf("'%s'", pkg.Application.PackageDesc),
+		PkgDesc:     fmt.Sprintf("\"%s\"", pkg.Application.PackageDesc),
 		BranchName:  impl.cfg.Robot.NewRepoBranch.Name,
 		ProtectType: impl.cfg.Robot.NewRepoBranch.ProtectType,
 		PublicType:  impl.cfg.Robot.NewRepoBranch.PublicType,
-	})
+	}, f)
+
+	return f, err
 }
 
 func (impl *pullRequestImpl) genTemplate(fileName string, data interface{}) (string, error) {
