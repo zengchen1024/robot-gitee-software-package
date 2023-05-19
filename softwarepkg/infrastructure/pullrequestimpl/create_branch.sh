@@ -7,7 +7,7 @@ branch_name=$2
 sig_info_file=$3
 sig_info_content=$4
 new_repo_file=$5
-new_repo_content=$6
+new_repo_file_tmp=$6
 
 new_branch() {
     cd $repo
@@ -32,7 +32,7 @@ modify() {
      mkdir -p $dn
   fi
 
-  echo "$new_repo_content" > $new_repo_file
+  mv $new_repo_file_tmp $new_repo_file
 }
 
 commit() {

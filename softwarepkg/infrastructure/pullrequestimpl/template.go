@@ -3,6 +3,7 @@ package pullrequestimpl
 import (
 	"bytes"
 	"html/template"
+	"io/ioutil"
 )
 
 type sigInfoTplData struct {
@@ -65,8 +66,14 @@ func (impl *templateImpl) genSigInfo(data *sigInfoTplData) (string, error) {
 	return impl.gen(impl.sigInfoTpl, data)
 }
 
-func (impl *templateImpl) genRepoYaml(data *repoYamlTplData) (string, error) {
-	return impl.gen(impl.repoYamlTpl, data)
+func (impl *templateImpl) genRepoYaml(data *repoYamlTplData, f string) error {
+	buf := new(bytes.Buffer)
+
+	if err := impl.repoYamlTpl.Execute(buf, data); err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(f, buf.Bytes(), 0644)
 }
 
 func (impl *templateImpl) gen(tpl *template.Template, data interface{}) (string, error) {
