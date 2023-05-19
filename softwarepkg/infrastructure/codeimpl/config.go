@@ -9,7 +9,7 @@ type Config struct {
 
 func (c *Config) SetDefault() {
 	if c.ShellScript == "" {
-		c.ShellScript = "/opt/app/code.sh"
+		c.ShellScript = "/opt/app/push_code.sh"
 	}
 
 	if c.PkgSrcOrg == "" {
