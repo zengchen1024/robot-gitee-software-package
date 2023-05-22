@@ -2,8 +2,8 @@ package pullrequestimpl
 
 import (
 	"bytes"
-	"html/template"
 	"io/ioutil"
+	"text/template"
 )
 
 type sigInfoTplData struct {
@@ -14,7 +14,7 @@ type sigInfoTplData struct {
 
 type repoYamlTplData struct {
 	PkgName     string
-	PkgDesc     template.HTML
+	PkgDesc     string
 	BranchName  string
 	ProtectType string
 	PublicType  string

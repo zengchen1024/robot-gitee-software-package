@@ -3,9 +3,9 @@ package pullrequestimpl
 import (
 	"bytes"
 	"fmt"
-	"html/template"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	"github.com/opensourceways/server-common-lib/utils"
 	"github.com/sirupsen/logrus"
@@ -72,7 +72,7 @@ func (impl *pullRequestImpl) genNewRepoFile(pkg *domain.SoftwarePkg) (string, er
 
 	err := impl.template.genRepoYaml(&repoYamlTplData{
 		PkgName:     pkg.Name,
-		PkgDesc:     template.HTML(fmt.Sprintf("'%s'", pkg.Application.PackageDesc)),
+		PkgDesc:     fmt.Sprintf("'%s'", pkg.Application.PackageDesc),
 		BranchName:  impl.cfg.Robot.NewRepoBranch.Name,
 		ProtectType: impl.cfg.Robot.NewRepoBranch.ProtectType,
 		PublicType:  impl.cfg.Robot.NewRepoBranch.PublicType,
