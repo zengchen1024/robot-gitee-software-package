@@ -15,6 +15,7 @@ type sigInfoTplData struct {
 type repoYamlTplData struct {
 	PkgName     string
 	PkgDesc     string
+	Upstream    string
 	BranchName  string
 	ProtectType string
 	PublicType  string

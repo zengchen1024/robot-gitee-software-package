@@ -11,6 +11,7 @@ type msgToHandleNewPkg struct {
 	PkgId             string `json:"pkg_id"`
 	PkgName           string `json:"pkg_name"`
 	PkgDesc           string `json:"pkg_desc"`
+	Upstream          string `json:"upstream"`
 	SpecURL           string `json:"spec_url"`
 	SrcRPMURL         string `json:"src_rpm_url"`
 	ImportingPkgSig   string `json:"sig"`
@@ -36,6 +37,7 @@ func (msg *msgToHandleNewPkg) toCmd() app.CmdToHandleNewPkg {
 			PackageDesc:       msg.PkgDesc,
 			ImportingPkgSig:   msg.ImportingPkgSig,
 			ReasonToImportPkg: msg.ReasonToImportPkg,
+			Upstream:          msg.Upstream,
 		},
 		CIPRNum: msg.CIPRNum,
 	}
