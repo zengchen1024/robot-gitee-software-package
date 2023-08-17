@@ -133,6 +133,13 @@ func (impl *WatchingImpl) handle(pkg domain.SoftwarePkg) {
 		if err := impl.service.HandlePushCode(&pkg); err != nil {
 			logrus.Errorf("handle push code err: %s", err.Error())
 		}
+
+	case domain.PkgStatusPRException:
+		if pkg.IsPRExceptionExpiried() {
+			if err := impl.handlePR(pkg); err != nil {
+				logrus.Errorf("handle pr err: %s", err.Error())
+			}
+		}
 	}
 }
 

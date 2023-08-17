@@ -64,49 +64,80 @@ func (s *packageService) HandleCI(cmd *CmdToHandleCI) error {
 		return err
 	}
 
+	f := func() error {
+		e := domain.PRCIFinishedEvent{
+			PkgId:        pkg.Id,
+			RelevantPR:   pkg.PullRequest.Link,
+			RepoLink:     cmd.RepoLink,
+			FailedReason: cmd.FailedReason,
+		}
+
+		return s.producer.NotifyCIResult(&e)
+
+	}
+
 	if cmd.isSuccess() {
-		if err := s.mergePR(pkg); err != nil {
-			return s.notifyException(&pkg, err.Error())
-		}
-	} else {
-		if !cmd.isPkgExisted() {
-			return s.notifyException(&pkg, cmd.FailedReason)
-		}
-		s.closePR(pkg)
+		return s.handleCISuccess(&pkg, f)
 	}
 
-	e := domain.PRCIFinishedEvent{
-		PkgId:        pkg.Id,
-		RelevantPR:   pkg.PullRequest.Link,
-		RepoLink:     cmd.RepoLink,
-		FailedReason: cmd.FailedReason,
-	}
-
-	return s.producer.NotifyCIResult(&e)
+	return s.handleCIFailure(&pkg, cmd, f)
 }
 
-func (s *packageService) mergePR(pkg domain.SoftwarePkg) error {
+func (s *packageService) handleCISuccess(pkg *domain.SoftwarePkg, sendEvent func() error) error {
 	if err := s.prCli.Merge(pkg.PullRequest.Num); err != nil {
 		return fmt.Errorf("merge pr(%d) failed: %s", pkg.PullRequest.Num, err.Error())
 	}
 
+	if err := sendEvent(); err != nil {
+		return err
+	}
+
 	pkg.SetPkgStatusPRMerged()
 
-	if err := s.repo.Save(&pkg); err != nil {
-		logrus.Errorf("save pr(%d) failed: %s", pkg.PullRequest.Num, err.Error())
+	if err := s.repo.Save(pkg); err != nil {
+		return fmt.Errorf("save pr(%d) failed: %s", pkg.PullRequest.Num, err.Error())
 	}
 
 	return nil
 }
 
-func (s *packageService) closePR(pkg domain.SoftwarePkg) {
+func (s *packageService) handleCIFailure(pkg *domain.SoftwarePkg, cmd *CmdToHandleCI, sendEvent func() error) error {
+	if !cmd.isPkgExisted() {
+		return s.notifyCIFailure(pkg, cmd.FailedReason)
+	}
+
 	if err := s.prCli.Close(pkg.PullRequest.Num); err != nil {
-		logrus.Errorf("close pr/%d failed: %s", pkg.PullRequest.Num, err.Error())
+		return fmt.Errorf("close pr/%d failed: %s", pkg.PullRequest.Num, err.Error())
+	}
+
+	if err := sendEvent(); err != nil {
+		return err
 	}
 
 	if err := s.repo.Remove(pkg.PullRequest.Num); err != nil {
-		logrus.Errorf("remove pr/%d failed: %s", pkg.PullRequest.Num, err.Error())
+		return fmt.Errorf("remove pr/%d failed: %s", pkg.PullRequest.Num, err.Error())
 	}
+
+	return nil
+}
+
+func (s *packageService) notifyCIFailure(
+	pkg *domain.SoftwarePkg, reason string,
+) error {
+	subject := "the ci failed when applying software package at community"
+	content := s.emailContent(pkg.PullRequest.Link)
+
+	if err := s.email.Send(subject, content); err != nil {
+		return fmt.Errorf("send email failed, err:%s", err.Error())
+	}
+
+	pkg.SetPkgPRException()
+
+	if err := s.repo.Save(pkg); err != nil {
+		return fmt.Errorf("save pkg when exception happened, err: %s", err.Error())
+	}
+
+	return nil
 }
 
 func (s *packageService) HandleRepoCreated(pkg *domain.SoftwarePkg, url string) error {
@@ -185,33 +216,11 @@ func (s *packageService) HandlePRClosed(cmd *CmdToHandlePRClosed) error {
 		return fmt.Errorf("send email failed: %s", err.Error())
 	}
 
-	pkg.SetPkgStatusException()
+	pkg.SetPkgPRException()
 
 	return s.repo.Save(&pkg)
 }
 
 func (s *packageService) emailContent(url string) string {
 	return fmt.Sprintf("th pr url is: %s", url)
-}
-
-func (s *packageService) notifyException(
-	pkg *domain.SoftwarePkg, reason string,
-) error {
-	subject := fmt.Sprintf(
-		"the ci of software package check failed: %s",
-		reason,
-	)
-	content := s.emailContent(pkg.PullRequest.Link)
-
-	if err := s.email.Send(subject, content); err != nil {
-		return fmt.Errorf("send email failed: %s", err.Error())
-	}
-
-	pkg.SetPkgStatusException()
-
-	if err := s.repo.Save(pkg); err != nil {
-		return fmt.Errorf("save pkg when exception error: %s", err.Error())
-	}
-
-	return nil
 }

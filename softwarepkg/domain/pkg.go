@@ -1,11 +1,13 @@
 package domain
 
+import "time"
+
 const (
-	PkgStatusInitialized = "initialized"
-	PkgStatusPRCreated   = "pr_created"
 	PkgStatusPRMerged    = "pr_merged"
+	PkgStatusPRCreated   = "pr_created"
+	PkgStatusPRException = "pr_exception"
 	PkgStatusRepoCreated = "repo_created"
-	PkgStatusException   = "exception" // more information in the email of maintainer
+	PkgStatusInitialized = "initialized"
 )
 
 type SoftwarePkgSourceCode struct {
@@ -40,11 +42,12 @@ type Importer struct {
 type SoftwarePkg struct {
 	SoftwarePkgBasic
 
-	Status      string
-	PullRequest PullRequest
-	Importer    Importer
-	Application SoftwarePkgApplication
-	CIPRNum     int
+	Status            string
+	PullRequest       PullRequest
+	Importer          Importer
+	Application       SoftwarePkgApplication
+	CIPRNum           int
+	PRExceptionExpiry int64
 }
 
 func (r *SoftwarePkg) SetPkgStatusInitialized() {
@@ -63,8 +66,13 @@ func (r *SoftwarePkg) SetPkgStatusRepoCreated() {
 	r.Status = PkgStatusRepoCreated
 }
 
-func (r *SoftwarePkg) SetPkgStatusException() {
-	r.Status = PkgStatusException
+func (r *SoftwarePkg) SetPkgPRException() {
+	r.Status = PkgStatusPRException
+	r.PRExceptionExpiry = time.Now().Unix() + 600
+}
+
+func (r *SoftwarePkg) IsPRExceptionExpiried() bool {
+	return time.Now().Unix() >= r.PRExceptionExpiry
 }
 
 func (r *SoftwarePkg) IsPkgStatusMerged() bool {
