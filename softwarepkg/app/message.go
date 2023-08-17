@@ -23,13 +23,6 @@ type messageService struct {
 }
 
 func (s *messageService) NewPkg(cmd *CmdToHandleNewPkg) error {
-	pr, err := s.prCli.Create(cmd)
-	if err != nil {
-		return err
-	}
-
-	cmd.PullRequest = pr
-
 	cmd.SetPkgStatusInitialized()
 
 	return s.repo.Add(cmd)

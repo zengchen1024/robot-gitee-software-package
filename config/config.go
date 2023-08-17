@@ -4,7 +4,6 @@ import (
 	kafka "github.com/opensourceways/kafka-lib/agent"
 	"github.com/opensourceways/server-common-lib/utils"
 
-	"github.com/opensourceways/robot-gitee-software-package/community"
 	"github.com/opensourceways/robot-gitee-software-package/message-server"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/codeimpl"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/infrastructure/emailimpl"
@@ -48,7 +47,6 @@ type Config struct {
 	Kafka         kafka.Config           `json:"kafka"`
 	Email         emailimpl.Config       `json:"email"`
 	Watch         watch.Config           `json:"watch"`
-	Community     community.Config       `json:"community"`
 	Postgresql    PostgresqlConfig       `json:"postgresql"`
 	Encryption    localutils.Config      `json:"encryption"`
 	PullRequest   pullrequestimpl.Config `json:"pull_request"`
@@ -61,7 +59,6 @@ func (cfg *Config) configItems() []interface{} {
 		&cfg.Kafka,
 		&cfg.Email,
 		&cfg.Watch,
-		&cfg.Community,
 		&cfg.Postgresql.DB,
 		&cfg.Postgresql.Config,
 		&cfg.Encryption,

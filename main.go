@@ -13,7 +13,6 @@ import (
 	liboptions "github.com/opensourceways/server-common-lib/options"
 	"github.com/sirupsen/logrus"
 
-	"github.com/opensourceways/robot-gitee-software-package/community"
 	"github.com/opensourceways/robot-gitee-software-package/config"
 	"github.com/opensourceways/robot-gitee-software-package/message-server"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/app"
@@ -109,18 +108,10 @@ func run(cfg *config.Config) {
 		codeimpl.NewCodeImpl(cfg.Code),
 	)
 
-	eventHandler, err := community.NewEventHandler(&cfg.Community, repo, packageService)
-	if err != nil {
-		logrus.Errorf("init community event handler failed, err:%s", err.Error())
-
-		return
-	}
-
 	// message server
 	err = messageserver.Init(
 		&cfg.MessageServer,
 		app.NewMessageService(repo, pullRequest),
-		eventHandler,
 	)
 	if err != nil {
 		logrus.Errorf("init message server failed, err:%s", err.Error())

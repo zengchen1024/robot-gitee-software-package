@@ -6,17 +6,12 @@ import (
 
 	kafka "github.com/opensourceways/kafka-lib/agent"
 
-	"github.com/opensourceways/robot-gitee-software-package/community"
 	"github.com/opensourceways/robot-gitee-software-package/softwarepkg/app"
 )
 
-func Init(cfg *Config, service app.MessageService, handler community.EventHandler) error {
+func Init(cfg *Config, service app.MessageService) error {
 	s := messageServer{
 		service: service,
-		handler: giteeEventHandler{
-			handler:   handler,
-			userAgent: cfg.UserAgent,
-		},
 	}
 
 	return s.subscribe(cfg)
@@ -24,13 +19,11 @@ func Init(cfg *Config, service app.MessageService, handler community.EventHandle
 
 type messageServer struct {
 	service app.MessageService
-	handler giteeEventHandler
 }
 
 func (m *messageServer) subscribe(cfg *Config) error {
 	subscribers := map[string]kafka.Handler{
-		cfg.Topics.NewPkg:         m.handleNewPkg,
-		cfg.Topics.CommunityEvent: m.handler.handle,
+		cfg.Topics.NewPkg: m.handleNewPkg,
 	}
 
 	return kafka.Subscribe(cfg.GroupName, subscribers)

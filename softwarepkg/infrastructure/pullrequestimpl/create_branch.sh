@@ -20,7 +20,7 @@ new_branch() {
     git fetch upstream master
     git rebase upstream/master
 
-    git checkout -b $branch_name
+    git checkout -B $branch_name
 }
 
 modify() {

@@ -2,8 +2,10 @@ package domain
 
 const (
 	PkgStatusInitialized = "initialized"
+	PkgStatusPRCreated   = "pr_created"
 	PkgStatusPRMerged    = "pr_merged"
 	PkgStatusRepoCreated = "repo_created"
+	PkgStatusException   = "exception" // more information in the email of maintainer
 )
 
 type SoftwarePkgSourceCode struct {
@@ -49,12 +51,20 @@ func (r *SoftwarePkg) SetPkgStatusInitialized() {
 	r.Status = PkgStatusInitialized
 }
 
-func (r *SoftwarePkg) SetPkgStatusMerged() {
+func (r *SoftwarePkg) SetPkgStatusPRCreated() {
+	r.Status = PkgStatusPRCreated
+}
+
+func (r *SoftwarePkg) SetPkgStatusPRMerged() {
 	r.Status = PkgStatusPRMerged
 }
 
 func (r *SoftwarePkg) SetPkgStatusRepoCreated() {
 	r.Status = PkgStatusRepoCreated
+}
+
+func (r *SoftwarePkg) SetPkgStatusException() {
+	r.Status = PkgStatusException
 }
 
 func (r *SoftwarePkg) IsPkgStatusMerged() bool {

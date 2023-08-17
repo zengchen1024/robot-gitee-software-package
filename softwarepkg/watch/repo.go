@@ -33,6 +33,7 @@ func NewWatchingImpl(
 
 type iClient interface {
 	GetRepo(org, repo string) (sdk.Project, error)
+	GetGiteePullRequest(org, repo string, number int32) (sdk.PullRequest, error)
 }
 
 type WatchingImpl struct {
@@ -57,7 +58,7 @@ func (impl *WatchingImpl) Stop() {
 func (impl *WatchingImpl) watch() {
 	interval := impl.cfg.IntervalDuration()
 
-	checkStop := func() bool {
+	needStop := func() bool {
 		select {
 		case <-impl.stop:
 			return true
@@ -65,6 +66,16 @@ func (impl *WatchingImpl) watch() {
 			return false
 		}
 	}
+
+	var timer *time.Timer
+
+	defer func() {
+		if timer != nil {
+			timer.Stop()
+		}
+
+		close(impl.stopped)
+	}()
 
 	for {
 		prs, err := impl.repo.FindAll()
@@ -75,19 +86,39 @@ func (impl *WatchingImpl) watch() {
 		for _, pr := range prs {
 			impl.handle(pr)
 
-			if checkStop() {
-				close(impl.stopped)
-
+			if needStop() {
 				return
 			}
 		}
 
-		time.Sleep(interval)
+		// time starts.
+		if timer == nil {
+			timer = time.NewTimer(interval)
+		} else {
+			timer.Reset(interval)
+		}
+
+		select {
+		case <-impl.stop:
+			return
+
+		case <-timer.C:
+		}
 	}
 }
 
 func (impl *WatchingImpl) handle(pkg domain.SoftwarePkg) {
 	switch pkg.Status {
+	case domain.PkgStatusInitialized:
+		if err := impl.service.HandleCreatePR(&pkg); err != nil {
+			logrus.Errorf("handle create pr err: %s", err.Error())
+		}
+
+	case domain.PkgStatusPRCreated:
+		if err := impl.handlePR(pkg); err != nil {
+			logrus.Errorf("handle pr err: %s", err.Error())
+		}
+
 	case domain.PkgStatusPRMerged:
 		v, err := impl.cli.GetRepo(impl.cfg.PkgOrg, pkg.Name)
 		if err != nil {
@@ -103,4 +134,64 @@ func (impl *WatchingImpl) handle(pkg domain.SoftwarePkg) {
 			logrus.Errorf("handle push code err: %s", err.Error())
 		}
 	}
+}
+
+func (impl *WatchingImpl) handlePR(pkg domain.SoftwarePkg) error {
+	pr, err := impl.cli.GetGiteePullRequest(impl.cfg.CommunityOrg,
+		impl.cfg.CommunityRepo, int32(pkg.PullRequest.Num))
+	if err != nil {
+		return err
+	}
+
+	if pr.State == sdk.StatusOpen {
+		return impl.handleCILabel(pkg, pr)
+	}
+
+	return impl.handlePRState(pr)
+}
+
+func (impl *WatchingImpl) handleCILabel(pkg domain.SoftwarePkg, pr sdk.PullRequest) error {
+	cmd := app.CmdToHandleCI{
+		PRNum: int(pr.Number),
+	}
+
+	for _, l := range pr.Labels {
+		switch l.Name {
+		case impl.cfg.CISuccessLabel:
+			return impl.service.HandleCI(&cmd)
+
+		case impl.cfg.CIFailureLabel:
+			cmd.FailedReason = "ci check failed"
+
+			if v, err := impl.cli.GetRepo(impl.cfg.PkgOrg, pkg.Name); err == nil {
+				cmd.RepoLink = v.HtmlUrl
+				cmd.FailedReason = "package already exists"
+			}
+
+			return impl.service.HandleCI(&cmd)
+		}
+	}
+
+	return nil
+}
+
+func (impl *WatchingImpl) handlePRState(pr sdk.PullRequest) error {
+	switch pr.State {
+	case sdk.StatusMerged:
+		cmd := app.CmdToHandlePRMerged{
+			PRNum: int(pr.Number),
+		}
+
+		return impl.service.HandlePRMerged(&cmd)
+
+	case sdk.StatusClosed:
+		cmd := app.CmdToHandlePRClosed{
+			PRNum:      int(pr.Number),
+			RejectedBy: "maintainer",
+		}
+
+		return impl.service.HandlePRClosed(&cmd)
+	}
+
+	return nil
 }
